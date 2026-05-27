@@ -1,0 +1,14 @@
+[functions.create-driver]
+verify_jwt = false
+
+[functions.create-yoco-checkout]
+verify_jwt = false
+
+[functions.yoco-webhook]
+verify_jwt = false
+
+[functions.chat-rag]
+verify_jwt = false
+
+[functions.embed-knowledge-base]
+verify_jwt = false

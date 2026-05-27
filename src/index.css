@@ -1,0 +1,110 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --background: 40 33% 98%;
+    --foreground: 220 55% 10%;
+
+    --card: 0 0% 100%;
+    --card-foreground: 220 55% 10%;
+
+    --popover: 0 0% 100%;
+    --popover-foreground: 220 55% 10%;
+
+    --primary: 220 55% 15%;
+    --primary-foreground: 40 33% 98%;
+
+    --secondary: 220 20% 94%;
+    --secondary-foreground: 220 55% 15%;
+
+    --muted: 220 15% 92%;
+    --muted-foreground: 220 10% 45%;
+
+    --accent: 38 92% 50%;
+    --accent-foreground: 220 55% 10%;
+
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 0 0% 100%;
+
+    --border: 220 15% 90%;
+    --input: 220 15% 90%;
+    --ring: 38 92% 50%;
+
+    --radius: 0.75rem;
+
+    --sidebar-background: 0 0% 98%;
+    --sidebar-foreground: 240 5.3% 26.1%;
+    --sidebar-primary: 240 5.9% 10%;
+    --sidebar-primary-foreground: 0 0% 98%;
+    --sidebar-accent: 240 4.8% 95.9%;
+    --sidebar-accent-foreground: 240 5.9% 10%;
+    --sidebar-border: 220 13% 91%;
+    --sidebar-ring: 217.2 91.2% 59.8%;
+
+    /* Custom tokens */
+    --glass-bg: 0 0% 100%;
+    --gold: 38 92% 50%;
+    --gold-light: 38 92% 65%;
+    --navy: 220 55% 15%;
+    --navy-light: 220 40% 25%;
+  }
+
+  .dark {
+    --background: 220 55% 6%;
+    --foreground: 40 33% 96%;
+
+    --card: 220 50% 10%;
+    --card-foreground: 40 33% 96%;
+
+    --popover: 220 50% 10%;
+    --popover-foreground: 40 33% 96%;
+
+    --primary: 40 33% 96%;
+    --primary-foreground: 220 55% 10%;
+
+    --secondary: 220 30% 16%;
+    --secondary-foreground: 40 33% 96%;
+
+    --muted: 220 30% 16%;
+    --muted-foreground: 220 15% 60%;
+
+    --accent: 38 92% 50%;
+    --accent-foreground: 220 55% 10%;
+
+    --destructive: 0 62.8% 30.6%;
+    --destructive-foreground: 40 33% 96%;
+
+    --border: 220 30% 18%;
+    --input: 220 30% 18%;
+    --ring: 38 92% 50%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+  body {
+    @apply bg-background text-foreground font-sans antialiased;
+  }
+  h1, h2, h3, h4, h5, h6 {
+    @apply font-sans tracking-tight;
+  }
+}
+
+@layer utilities {
+  .glass {
+    @apply bg-white/70 backdrop-blur-xl border border-white/20 shadow-lg;
+  }
+  .glass-dark {
+    @apply bg-black/30 backdrop-blur-xl border border-white/10;
+  }
+  .text-gradient-gold {
+    @apply bg-gradient-to-r from-[hsl(var(--gold))] to-[hsl(var(--gold-light))] bg-clip-text text-transparent;
+  }
+  .section-padding {
+    @apply px-4 sm:px-6 lg:px-8 py-16 sm:py-20 lg:py-24;
+  }
+}
