@@ -157,10 +157,10 @@ Deno.serve(async (req) => {
     const { data: booking, error: bookingError } = await admin
       .from("bookings")
       .select(
-        "id, user_id, vehicle_id, service_type, booking_type, pickup_location, dropoff_location, pickup_date, pickup_time, status, price_estimate, notes, created_at, vehicles(name, capacity)"
+        "id, user_id, is_guest, guest_name, guest_email, guest_phone, vehicle_id, service_type, booking_type, pickup_location, dropoff_location, pickup_date, pickup_time, status, price_estimate, notes, created_at, vehicles(name, capacity)"
       )
       .eq("id", bookingId)
-      .single<BookingRow>();
+      .single<BookingRow & { is_guest?: boolean; guest_name?: string | null; guest_email?: string | null; guest_phone?: string | null }>();
 
     if (bookingError || !booking) {
       return new Response(
@@ -169,15 +169,23 @@ Deno.serve(async (req) => {
       );
     }
 
-    const { data: profile } = await admin
-      .from("profiles")
-      .select("full_name, phone")
-      .eq("id", booking.user_id)
-      .maybeSingle();
+    let profileName: string | null = null;
+    let profilePhone: string | null = null;
+    let userEmail: string | null = null;
 
-    const { data: authUser } = await admin.auth.admin.getUserById(booking.user_id);
-    const userEmail = authUser?.user?.email ?? null;
-    const to = body.to ?? userEmail;
+    if (booking.user_id) {
+      const { data: profile } = await admin
+        .from("profiles")
+        .select("full_name, phone")
+        .eq("id", booking.user_id)
+        .maybeSingle();
+      profileName = profile?.full_name ?? null;
+      profilePhone = profile?.phone ?? null;
+      const { data: authUser } = await admin.auth.admin.getUserById(booking.user_id);
+      userEmail = authUser?.user?.email ?? null;
+    }
+
+    const to = body.to ?? booking.guest_email ?? userEmail;
     if (!to) {
       return new Response(
         JSON.stringify({ error: "Could not resolve recipient email" }),
@@ -185,8 +193,8 @@ Deno.serve(async (req) => {
       );
     }
 
-    const fullName = profile?.full_name ?? "Customer";
-    const phone = profile?.phone ?? "";
+    const fullName = profileName ?? booking.guest_name ?? "Customer";
+    const phone = profilePhone ?? booking.guest_phone ?? "";
     const vehicleName = booking.vehicles?.name ?? "Vehicle";
     const price = formatRand(booking.price_estimate);
 

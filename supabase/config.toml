@@ -12,3 +12,9 @@ verify_jwt = false
 
 [functions.embed-knowledge-base]
 verify_jwt = false
+
+[functions.compute-route]
+verify_jwt = false
+
+[functions.send-booking-email]
+verify_jwt = false

@@ -12,7 +12,7 @@ import { formatNotes } from "@/lib/formatNotes";
 
 interface Booking {
   id: string;
-  user_id: string;
+  user_id: string | null;
   vehicle_id: string | null;
   driver_id: string | null;
   service_type: string;
@@ -26,12 +26,21 @@ interface Booking {
   price_estimate: number | null;
   payment_status: string | null;
   notes: string | null;
+  is_guest?: boolean | null;
+  guest_name?: string | null;
+  guest_email?: string | null;
+  guest_phone?: string | null;
+  extras?: { id: string; label: string; qty: number; unit_price: number; subtotal: number }[] | null;
+  extras_total?: number | null;
+  extra_stop?: boolean | null;
+  extra_stop_location?: string | null;
   created_at: string;
   updated_at: string;
   vehicles?: { name: string } | null;
   drivers?: { full_name: string } | null;
   customer_name?: string;
   customer_email?: string;
+  customer_phone?: string;
 }
 
 interface Driver {
@@ -89,18 +98,21 @@ const AdminBookings = () => {
     const [bookingsRes, driversRes, profilesRes] = await Promise.all([
       supabase
         .from("bookings")
-        .select("id, user_id, vehicle_id, driver_id, service_type, booking_type, pickup_location, dropoff_location, hours, pickup_date, pickup_time, status, price_estimate, payment_status, notes, created_at, updated_at, vehicles:vehicle_id(name), drivers:driver_id(full_name)")
+        .select("id, user_id, vehicle_id, driver_id, service_type, booking_type, pickup_location, dropoff_location, hours, pickup_date, pickup_time, status, price_estimate, payment_status, notes, is_guest, guest_name, guest_email, guest_phone, extras, extras_total, extra_stop, extra_stop_location, created_at, updated_at, vehicles:vehicle_id(name), drivers:driver_id(full_name)")
         .order("created_at", { ascending: false }),
       supabase.from("drivers").select("*").eq("is_active", true),
-      supabase.from("profiles").select("id, full_name"),
+      supabase.from("profiles").select("id, full_name, phone"),
     ]);
-    const profileMap = new Map<string, { name: string; email: string }>();
+    const profileMap = new Map<string, { name: string; email: string; phone: string }>();
     (profilesRes.data as Profile[] || []).forEach(p => {
-      profileMap.set(p.id, { name: p.full_name || "Unknown", email: (p as any).email || "" });
+      profileMap.set(p.id, { name: p.full_name || "Unknown", email: (p as any).email || "", phone: (p as any).phone || "" });
     });
     const enriched = ((bookingsRes.data as unknown as Booking[]) || []).map(b => {
-      const p = profileMap.get(b.user_id);
-      return { ...b, customer_name: p?.name || "Unknown", customer_email: p?.email || "" };
+      if (b.is_guest) {
+        return { ...b, customer_name: b.guest_name || "Guest", customer_email: b.guest_email || "", customer_phone: b.guest_phone || "" };
+      }
+      const p = b.user_id ? profileMap.get(b.user_id) : undefined;
+      return { ...b, customer_name: p?.name || "Unknown", customer_email: p?.email || "", customer_phone: p?.phone || "" };
     });
     setBookings(enriched);
     setDrivers((driversRes.data as Driver[]) || []);
@@ -306,6 +318,11 @@ const AdminBookings = () => {
                   <span className={`px-2.5 py-0.5 rounded-full text-xs font-medium capitalize border ${statusColors[booking.status] || ""}`}>
                     {booking.status.replace(/_/g, " ")}
                   </span>
+                  {booking.is_guest && (
+                    <span className="px-2 py-0.5 rounded-full text-xs font-semibold border bg-accent/10 text-accent border-accent/30">
+                      👤 Guest
+                    </span>
+                  )}
                   <span className="text-xs text-muted-foreground capitalize">{booking.service_type.replace(/_/g, " ")}</span>
                   {booking.payment_status && (
                     <span className={`px-2 py-0.5 rounded-full text-xs font-medium border ${
@@ -330,7 +347,10 @@ const AdminBookings = () => {
 
                 <div className="flex items-center gap-3 text-xs text-muted-foreground flex-wrap mb-3">
                   <span>{booking.pickup_date} at {booking.pickup_time}</span>
-                  <span>Customer: {booking.customer_name}</span>
+                  <span>
+                    {booking.is_guest ? "Guest" : "Customer"}: {booking.customer_name}
+                    {booking.customer_phone && <span className="ml-1">· {booking.customer_phone}</span>}
+                  </span>
                   {booking.vehicles?.name && <span>Vehicle: {booking.vehicles.name}</span>}
                   {booking.drivers?.full_name && <span>Driver: {booking.drivers.full_name}</span>}
                 </div>
@@ -338,11 +358,28 @@ const AdminBookings = () => {
                 {isExpanded && (
                   <div className="mb-3 p-3 rounded-xl bg-secondary/40 text-xs space-y-1 border border-border/40">
                     <div><span className="text-muted-foreground">Booking ID:</span> <span className="font-mono">{booking.id}</span></div>
+                    <div><span className="text-muted-foreground">Booked by:</span> {booking.is_guest ? "Guest (no account)" : "Registered user"}</div>
                     {booking.customer_email && <div><span className="text-muted-foreground">Email:</span> {booking.customer_email}</div>}
+                    {booking.customer_phone && <div><span className="text-muted-foreground">Phone:</span> {booking.customer_phone}</div>}
                     <div><span className="text-muted-foreground">Booking type:</span> {booking.booking_type}</div>
                     {booking.hours != null && <div><span className="text-muted-foreground">Hours:</span> {booking.hours}</div>}
                     <div><span className="text-muted-foreground">Created:</span> {new Date(booking.created_at).toLocaleString()}</div>
                     <div><span className="text-muted-foreground">Updated:</span> {new Date(booking.updated_at).toLocaleString()}</div>
+                    {Array.isArray(booking.extras) && booking.extras.length > 0 && (
+                      <div className="break-words">
+                        <span className="text-muted-foreground">Extras:</span>{" "}
+                        {booking.extras.map(e => `${e.label}${e.qty > 1 ? ` ×${e.qty}` : ""} (R${e.subtotal})`).join(", ")}
+                      </div>
+                    )}
+                    {booking.extra_stop && (
+                      <div className="break-words">
+                        <span className="text-muted-foreground">Extra stop:</span>{" "}
+                        {booking.extra_stop_location || "(no address)"} (+R100)
+                      </div>
+                    )}
+                    {booking.extras_total != null && Number(booking.extras_total) > 0 && (
+                      <div><span className="text-muted-foreground">Extras total:</span> R{booking.extras_total}</div>
+                    )}
                     {booking.notes && (() => {
                       const display = formatNotes(booking.notes);
                       return display ? <div className="break-words"><span className="text-muted-foreground">Notes:</span> {display}</div> : null;

@@ -83,7 +83,7 @@ const App = () => (
             />
             <Route path="/services" element={<Services />} />
             <Route path="/fleet" element={<Fleet />} />
-            <Route path="/book" element={<ProtectedRoute><BookNow /></ProtectedRoute>} />
+            <Route path="/book" element={<BookNow />} />
             <Route path="/auth" element={<Auth />} />
             <Route path="/dashboard" element={<Dashboard />} />
             <Route path="/profile" element={<Profile />} />
