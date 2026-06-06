@@ -98,11 +98,6 @@ const Fleet = () => {
                     <span className="text-muted-foreground">No image</span>
                   </div>
                 )}
-                <div className="absolute top-3 right-3 bg-accent/90 backdrop-blur px-3 py-1 rounded-full">
-                  <p className="text-xs font-semibold text-accent-foreground">
-                    R{v.price_per_km || "N/A"}/km
-                  </p>
-                </div>
               </div>
 
               {/* Content */}

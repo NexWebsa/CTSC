@@ -208,7 +208,7 @@ const POINTS_OF_INTEREST = [
   "Cape Town International Airport",
   "Table Mountain",
   "Stellenbosch Winelands",
-  "Custom point",
+  "Custom (Please specify in notes)"
 ];
 
 // ─────────────────────────────────────────────────────────────
@@ -554,11 +554,12 @@ const PassengerStep = ({
           {isAirport && (
             <div className="space-y-1.5 sm:col-span-2">
               <Label className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider flex items-center gap-1.5">
-                <Plane className="w-3.5 h-3.5" /> Flight number (optional)
+                <Plane className="w-3.5 h-3.5" /> Flight number *
               </Label>
               <Input value={passenger.flightNumber} onChange={(e) => update("flightNumber", e.target.value)} placeholder="e.g. BA 6231" className="h-11" />
             </div>
           )}
+
           <div className="space-y-1.5 sm:col-span-2">
             <Label className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">Special requests (optional)</Label>
             <Textarea value={passenger.notes} onChange={(e) => update("notes", e.target.value)} rows={3} placeholder="Anything we should know?" />
@@ -751,6 +752,10 @@ const BookingWizard = () => {
     if (!passenger.fullName || !passenger.email || !passenger.phone) {
       toast({ title: "Missing details", description: "Name, email and phone are required.", variant: "destructive" }); return;
     }
+    if (trip.serviceType === "airport_transfer" && !passenger.flightNumber.trim()) {
+      toast({ title: "Flight number required", description: "Please enter your flight number for airport transfers.", variant: "destructive" }); return;
+    }
+
     if (!passenger.acceptTerms) {
       toast({ title: "Please accept the terms", variant: "destructive" }); return;
     }

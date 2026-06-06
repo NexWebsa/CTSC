@@ -20,7 +20,7 @@ const BookNow = () => {
             <span className="text-xs font-bold tracking-[0.2em] uppercase text-accent">Book your shuttle</span>
             <h1 className="text-3xl sm:text-5xl font-bold text-foreground mt-2">Your journey, just a few taps away</h1>
             <p className="text-muted-foreground mt-3 text-base max-w-2xl mx-auto">
-              Get instant pricing and availability. No account needed — book as a guest or sign in to track your trips.
+              Get instant pricing and availability. No account needed, book as a guest or sign in to track your trips.
             </p>
           </motion.div>
           <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.15 }}>

@@ -101,13 +101,6 @@ const FleetPreview = () => {
                   {/* Gradient overlay — always present, darkens on hover */}
                   <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/10 to-transparent opacity-60 group-hover:opacity-80 transition-opacity duration-300" />
 
-                  {/* Price badge — bottom left */}
-                  {vehicle.price_per_km && (
-                    <div className="absolute bottom-4 left-4 bg-accent text-white text-xs font-bold px-3 py-1.5 rounded-full shadow-sm">
-                      R{vehicle.price_per_km}/km
-                    </div>
-                  )}
-
                   {/* Capacity badge — bottom right */}
                   {vehicle.capacity > 0 && (
                     <div className="absolute bottom-4 right-4 flex items-center gap-1.5 bg-black/50 backdrop-blur-sm text-white text-xs font-medium px-3 py-1.5 rounded-full border border-white/10">
