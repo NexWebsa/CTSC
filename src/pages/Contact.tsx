@@ -38,20 +38,20 @@ const Contact = () => {
     {
       icon: Phone,
       title: "Phone",
-      content: "021 300 5297 | 083 766 8601",
+      content: "083 766 8601",
       subContent: "Available 24 Hours",
     },
     {
       icon: Mail,
       title: "Email",
-      content: "info@shuttlecapetown.co.za",
+      content: "info@shuttlecapetown.com",
       subContent: "We'll respond within 2 hours",
     },
     {
       icon: MapPin,
       title: "Location",
-      content: "Centre, 384 Voortrekker Rd",
-      subContent: "Maitland, Cape Town, 7405",
+      content: "DF Malan Street, Parow North",
+      subContent: "Cape Town, 7500",
     },
   ];
 
@@ -65,11 +65,6 @@ const Contact = () => {
       name: "Instagram",
       url: "https://www.instagram.com/ctsctravel2026?igsh=MTQ1MnEyZndkbXd3bA==",
       icon: Instagram,
-    },
-    {
-      name: "Twitter",
-      url: "https://twitter.com/ZwartzSevero",
-      icon: Twitter,
     },
     {
       name: "LinkedIn",

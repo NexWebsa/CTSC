@@ -299,6 +299,33 @@ export type Database = {
         }
         Relationships: []
       }
+      points_of_interest: {
+        Row: {
+          category: string | null
+          created_at: string
+          id: string
+          is_active: boolean
+          name: string
+          sort_order: number
+        }
+        Insert: {
+          category?: string | null
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          name: string
+          sort_order?: number
+        }
+        Update: {
+          category?: string | null
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          name?: string
+          sort_order?: number
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           avatar_url: string | null
@@ -376,6 +403,8 @@ export type Database = {
           capacity: number
           created_at: string | null
           description: string | null
+          features: string[]
+          gallery_images: string[]
           id: string
           image_url: string | null
           is_active: boolean | null
@@ -387,6 +416,8 @@ export type Database = {
           capacity: number
           created_at?: string | null
           description?: string | null
+          features?: string[]
+          gallery_images?: string[]
           id?: string
           image_url?: string | null
           is_active?: boolean | null
@@ -398,6 +429,8 @@ export type Database = {
           capacity?: number
           created_at?: string | null
           description?: string | null
+          features?: string[]
+          gallery_images?: string[]
           id?: string
           image_url?: string | null
           is_active?: boolean | null

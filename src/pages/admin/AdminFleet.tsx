@@ -19,6 +19,8 @@ interface Vehicle {
   image_url: string | null;
   price_per_km: number | null;
   price_per_hour: number | null;
+  features: string[] | null;
+  gallery_images: string[] | null;
   is_active: boolean;
   created_at: string;
 }
@@ -31,10 +33,12 @@ const AdminFleet = () => {
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
-  const [form, setForm] = useState({ name: "", description: "", capacity: "4", price_per_km: "", price_per_hour: "", image_url: "" });
+  const [form, setForm] = useState({ name: "", description: "", capacity: "4", price_per_km: "", price_per_hour: "", image_url: "", features: "", gallery_images: [] as string[] });
   const [uploading, setUploading] = useState(false);
+  const [galleryUploading, setGalleryUploading] = useState(false);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const galleryInputRef = useRef<HTMLInputElement>(null);
 
   const fetchVehicles = async () => {
     const { data } = await supabase.from("vehicles").select("*").order("created_at", { ascending: false });
@@ -47,7 +51,7 @@ const AdminFleet = () => {
   }, [isAdmin]);
 
   const resetForm = () => {
-    setForm({ name: "", description: "", capacity: "4", price_per_km: "", price_per_hour: "", image_url: "" });
+    setForm({ name: "", description: "", capacity: "4", price_per_km: "", price_per_hour: "", image_url: "", features: "", gallery_images: [] });
     setEditingId(null);
     setShowForm(false);
     setPreviewUrl(null);
@@ -79,6 +83,11 @@ const AdminFleet = () => {
       return;
     }
 
+    const featuresArr = form.features
+      .split(",")
+      .map((s) => s.trim())
+      .filter(Boolean);
+
     const payload = {
       name: form.name,
       description: form.description || null,
@@ -86,6 +95,8 @@ const AdminFleet = () => {
       price_per_km: form.price_per_km ? parseFloat(form.price_per_km) : null,
       price_per_hour: form.price_per_hour ? parseFloat(form.price_per_hour) : null,
       image_url: form.image_url || null,
+      features: featuresArr,
+      gallery_images: form.gallery_images,
     };
 
     if (editingId) {
@@ -99,6 +110,32 @@ const AdminFleet = () => {
     fetchVehicles();
   };
 
+  const handleGalleryUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = Array.from(e.target.files || []);
+    if (files.length === 0) return;
+    setGalleryUploading(true);
+    try {
+      const urls: string[] = [];
+      for (const file of files) {
+        const ext = file.name.split(".").pop();
+        const path = `vehicles/gallery-${Date.now()}-${Math.random().toString(36).slice(2, 7)}.${ext}`;
+        const publicUrl = await uploadImage(file, "vehicle-images", path, { cacheControl: "3600", upsert: true });
+        urls.push(publicUrl);
+      }
+      setForm((prev) => ({ ...prev, gallery_images: [...prev.gallery_images, ...urls] }));
+      toast({ title: `${urls.length} image(s) uploaded` });
+    } catch (err: any) {
+      toast({ title: "Upload failed", description: err.message, variant: "destructive" });
+    } finally {
+      setGalleryUploading(false);
+      if (galleryInputRef.current) galleryInputRef.current.value = "";
+    }
+  };
+
+  const removeGalleryImage = (url: string) => {
+    setForm((prev) => ({ ...prev, gallery_images: prev.gallery_images.filter((u) => u !== url) }));
+  };
+
   const handleEdit = (v: Vehicle) => {
     setForm({
       name: v.name,
@@ -107,6 +144,8 @@ const AdminFleet = () => {
       price_per_km: v.price_per_km ? String(v.price_per_km) : "",
       price_per_hour: v.price_per_hour ? String(v.price_per_hour) : "",
       image_url: v.image_url || "",
+      features: (v.features || []).join(", "),
+      gallery_images: v.gallery_images || [],
     });
     setPreviewUrl(v.image_url || null);
     setEditingId(v.id);
@@ -190,6 +229,53 @@ const AdminFleet = () => {
                     {uploading ? "Uploading..." : "Upload Image"}
                   </Button>
                 )}
+              </div>
+              <div className="space-y-2 sm:col-span-2">
+                <Label>Features / Specifications (comma-separated)</Label>
+                <Input
+                  placeholder="e.g. Aircon, Towbar, USB Charging, Leather Seats, Bluetooth"
+                  value={form.features}
+                  onChange={(e) => setForm({ ...form, features: e.target.value })}
+                />
+                <p className="text-xs text-muted-foreground">Shown to users on the vehicle detail modal.</p>
+              </div>
+              <div className="space-y-2 sm:col-span-2">
+                <Label>Gallery Images (extra photos)</Label>
+                <input
+                  ref={galleryInputRef}
+                  type="file"
+                  accept="image/jpeg,image/png,image/webp"
+                  multiple
+                  onChange={handleGalleryUpload}
+                  className="hidden"
+                />
+                {form.gallery_images.length > 0 && (
+                  <div className="grid grid-cols-3 sm:grid-cols-4 gap-2">
+                    {form.gallery_images.map((url) => (
+                      <div key={url} className="relative aspect-square rounded-lg overflow-hidden border border-border group">
+                        <img src={url} alt="Gallery" className="w-full h-full object-cover" />
+                        <Button
+                          variant="destructive"
+                          size="icon"
+                          className="absolute top-1 right-1 h-6 w-6 opacity-0 group-hover:opacity-100 transition"
+                          onClick={() => removeGalleryImage(url)}
+                        >
+                          <X className="w-3 h-3" />
+                        </Button>
+                      </div>
+                    ))}
+                  </div>
+                )}
+                <Button
+                  type="button"
+                  variant="outline"
+                  className="w-full border-dashed gap-2"
+                  onClick={() => galleryInputRef.current?.click()}
+                  disabled={galleryUploading}
+                >
+                  <Upload className="w-4 h-4" />
+                  {galleryUploading ? "Uploading..." : "Add Gallery Images"}
+                </Button>
               </div>
             </div>
             <div className="flex gap-2">

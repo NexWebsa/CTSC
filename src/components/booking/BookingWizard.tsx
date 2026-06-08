@@ -52,6 +52,7 @@ interface TripData {
   extras: Record<string, number>;
   extraStop: boolean;
   extraStopLocation: string;
+  airportDirection: "to_airport" | "from_airport";
 }
 
 interface PassengerData {
@@ -77,6 +78,7 @@ const initialTrip = (s: ServiceTab): TripData => ({
   pointsOfInterest: "",
   distanceKm: null, durationMinutes: null,
   extras: {}, extraStop: false, extraStopLocation: "",
+  airportDirection: "to_airport",
 });
 
 // ─────────────────────────────────────────────────────────────
@@ -202,14 +204,87 @@ const ExtrasSection = ({ trip, setTrip }: { trip: TripData; setTrip: (t: TripDat
 };
 
 
-const POINTS_OF_INTEREST = [
-  "Cape Town CBD",
-  "V&A Waterfront",
-  "Cape Town International Airport",
-  "Table Mountain",
-  "Stellenbosch Winelands",
-  "Custom (Please specify in notes)"
-];
+const CUSTOM_POI = "Custom (Please specify in notes)";
+
+const usePointsOfInterest = () => {
+  const [points, setPoints] = useState<string[]>([]);
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      const { data, error } = await supabase
+        .from("points_of_interest")
+        .select("name")
+        .eq("is_active", true)
+        .order("sort_order", { ascending: true });
+      if (cancelled) return;
+      if (error || !data) {
+        setPoints([CUSTOM_POI]);
+        return;
+      }
+      setPoints([...data.map((p) => p.name as string), CUSTOM_POI]);
+    })();
+    return () => { cancelled = true; };
+  }, []);
+  return points;
+};
+
+// Support contact info
+const SUPPORT_CONTACT = {
+  whatsapp: "https://wa.me/27837668601",
+  email: "info@shuttlecapetown.com",
+  phone: "083 766 8601",
+};
+
+// ─────────────────────────────────────────────────────────────
+// Cancellation Policy Notice
+// ─────────────────────────────────────────────────────────────
+const CancellationNotice = ({ isGuest }: { isGuest: boolean }) => (
+  <div className="rounded-2xl border border-accent/30 bg-accent/5 p-4 space-y-2">
+    <div className="flex items-start gap-3">
+      <ShieldCheck className="w-5 h-5 text-accent shrink-0 mt-0.5" />
+      <div>
+        <p className="font-semibold text-foreground">Free Cancellation</p>
+        <p className="text-xs text-muted-foreground mt-1">
+          Cancel for free up to 2 days before your pickup date.
+          {isGuest ? " Contact us via WhatsApp or email to request a cancellation." : " You can request cancellations from your dashboard."}
+        </p>
+      </div>
+    </div>
+  </div>
+);
+
+// ─────────────────────────────────────────────────────────────
+// Support Section
+// ─────────────────────────────────────────────────────────────
+const SupportSection = () => (
+  <div className="rounded-2xl border border-border bg-secondary/30 p-4 space-y-3">
+    <p className="text-xs font-bold uppercase tracking-widest text-muted-foreground">Need help?</p>
+    <div className="grid sm:grid-cols-2 gap-3">
+      <a
+        href={SUPPORT_CONTACT.whatsapp}
+        target="_blank"
+        rel="noopener noreferrer"
+        className="flex items-center gap-2.5 p-3 rounded-lg border border-border hover:border-accent/40 hover:bg-accent/5 transition-all"
+      >
+        <Phone className="w-4 h-4 text-accent" />
+        <div className="text-left">
+          <p className="text-xs font-semibold text-foreground">WhatsApp</p>
+          <p className="text-[11px] text-muted-foreground">Chat with us</p>
+        </div>
+      </a>
+      <a
+        href={`mailto:${SUPPORT_CONTACT.email}`}
+        className="flex items-center gap-2.5 p-3 rounded-lg border border-border hover:border-accent/40 hover:bg-accent/5 transition-all"
+      >
+        <Mail className="w-4 h-4 text-accent" />
+        <div className="text-left">
+          <p className="text-xs font-semibold text-foreground">Email</p>
+          <p className="text-[11px] text-muted-foreground">info@shuttlecapetown.com</p>
+        </div>
+      </a>
+    </div>
+  </div>
+);
 
 // ─────────────────────────────────────────────────────────────
 // Step header / progress
@@ -246,6 +321,7 @@ const TripDetailsStep = ({ trip, setTrip, onNext, computing }: {
 }) => {
   const isChauffeur = trip.serviceType === "chauffeur";
   const update = <K extends keyof TripData>(k: K, v: TripData[K]) => setTrip({ ...trip, [k]: v });
+  const pointsOfInterest = usePointsOfInterest();
 
   if (isChauffeur) {
     return (
@@ -253,7 +329,7 @@ const TripDetailsStep = ({ trip, setTrip, onNext, computing }: {
         <p className="text-sm text-muted-foreground">
           Need a custom quote?{" "}
           <a
-            href="mailto:info@capetownshuttleservices.co.za?subject=Custom%20Shuttle%20Hire%20Itinerary"
+            href="mailto:info@shuttlecapetown.com?subject=Custom%20Shuttle%20Hire%20Itinerary"
             className="font-medium text-accent underline underline-offset-4"
           >
             Click to mail us your itinerary
@@ -262,8 +338,6 @@ const TripDetailsStep = ({ trip, setTrip, onNext, computing }: {
 
         <div className="grid grid-cols-2 gap-4">
           <NumberSelect value={trip.passengers} onChange={(n) => update("passengers", n)} min={1} max={32} label="Passengers" icon={Users} />
-          <NumberSelect value={trip.luggageCheckin} onChange={(n) => update("luggageCheckin", n)} max={20} label="Large bags" icon={Briefcase} />
-          <NumberSelect value={trip.luggageCarry} onChange={(n) => update("luggageCarry", n)} max={20} label="Carry-on bags" icon={Briefcase} />
         </div>
 
         <div className="space-y-1.5">
@@ -308,7 +382,7 @@ const TripDetailsStep = ({ trip, setTrip, onNext, computing }: {
               <SelectValue placeholder="Please select a point of interest" />
             </SelectTrigger>
             <SelectContent>
-              {POINTS_OF_INTEREST.map((point) => (
+              {pointsOfInterest.map((point) => (
                 <SelectItem key={point} value={point}>{point}</SelectItem>
               ))}
             </SelectContent>
@@ -408,6 +482,24 @@ const TripDetailsStep = ({ trip, setTrip, onNext, computing }: {
         </div>
       )}
 
+      {trip.serviceType === "airport_transfer" && (
+        <div className="bg-secondary/30 rounded-2xl p-4 border border-border/60">
+          <p className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider mb-2">Airport direction</p>
+          <div className="flex gap-6">
+            {(["to_airport", "from_airport"] as Array<"to_airport" | "from_airport">).map(d => (
+              <button key={d} type="button" onClick={() => update("airportDirection", d)}
+                className="flex items-center gap-2.5 text-sm font-medium py-1.5">
+                <span className={cn("w-4 h-4 rounded-full border-2 grid place-items-center transition-all",
+                  trip.airportDirection === d ? "border-accent" : "border-muted-foreground/40")}>
+                  {trip.airportDirection === d && <span className="w-2 h-2 rounded-full bg-accent" />}
+                </span>
+                <span className="text-foreground">{d === "to_airport" ? "Traveling TO airport" : "Traveling FROM airport"}</span>
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
+
       <ExtrasSection trip={trip} setTrip={setTrip} />
 
       <Button type="button" size="lg" onClick={onNext} disabled={computing}
@@ -421,12 +513,13 @@ const TripDetailsStep = ({ trip, setTrip, onNext, computing }: {
 // ─────────────────────────────────────────────────────────────
 // Step 2 — Vehicle selection
 // ─────────────────────────────────────────────────────────────
-const VehicleSelectStep = ({ trip, vehicles, selected, onSelect, onBack, onNext, loading }: {
+const VehicleSelectStep = ({ trip, vehicles, selected, onSelect, onBack, onNext, loading, isGuest }: {
   trip: TripData; vehicles: Vehicle[]; selected: string | null;
-  onSelect: (id: string) => void; onBack: () => void; onNext: () => void; loading: boolean;
+  onSelect: (id: string) => void; onBack: () => void; onNext: () => void; loading: boolean; isGuest: boolean;
 }) => (
   <div className="space-y-6">
-    {/* Trip summary */}
+    {/* Cancellation Notice */}
+    <CancellationNotice isGuest={isGuest} />
     <div className="rounded-2xl border border-border bg-secondary/30 p-4 grid sm:grid-cols-4 gap-4 text-sm">
       <div className="space-y-0.5">
         <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">From</p>
@@ -503,6 +596,9 @@ const VehicleSelectStep = ({ trip, vehicles, selected, onSelect, onBack, onNext,
       </div>
     )}
 
+    {/* Support Section */}
+    <SupportSection />
+
     <div className="flex gap-3">
       <Button type="button" variant="outline" onClick={onBack} className="h-12"><ArrowLeft className="w-4 h-4 mr-2" /> Back</Button>
       <Button type="button" size="lg" onClick={onNext} disabled={!selected}
@@ -551,10 +647,18 @@ const PassengerStep = ({
             <Label className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">Phone *</Label>
             <Input type="tel" value={passenger.phone} onChange={(e) => update("phone", e.target.value)} placeholder="+27 72 123 4567" className="h-11" />
           </div>
-          {isAirport && (
+          {isAirport && trip.airportDirection === "to_airport" && (
             <div className="space-y-1.5 sm:col-span-2">
               <Label className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider flex items-center gap-1.5">
                 <Plane className="w-3.5 h-3.5" /> Flight number *
+              </Label>
+              <Input value={passenger.flightNumber} onChange={(e) => update("flightNumber", e.target.value)} placeholder="e.g. BA 6231" className="h-11" />
+            </div>
+          )}
+          {isAirport && trip.airportDirection === "from_airport" && (
+            <div className="space-y-1.5 sm:col-span-2">
+              <Label className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider flex items-center gap-1.5">
+                <Plane className="w-3.5 h-3.5" /> Flight number (optional)
               </Label>
               <Input value={passenger.flightNumber} onChange={(e) => update("flightNumber", e.target.value)} placeholder="e.g. BA 6231" className="h-11" />
             </div>
@@ -698,6 +802,20 @@ const BookingWizard = () => {
       return;
     }
 
+    // Validate 12-hour advance booking requirement
+    const now = new Date();
+    const pickupDateTime = new Date(`${trip.pickupDate}T${trip.pickupTime}`);
+    const hoursUntilPickup = (pickupDateTime.getTime() - now.getTime()) / (1000 * 60 * 60);
+    
+    if (hoursUntilPickup < 12) {
+      toast({ 
+        title: "Booking too soon", 
+        description: "Please book at least 12 hours in advance. Please contact us for urgent bookings via WhatsApp or email.", 
+        variant: "destructive" 
+      });
+      return;
+    }
+
     setComputing(true);
     try {
       const hireHours = isChauffeur ? getHireHours(trip.pickupTime, trip.endTime, trip.hours) : trip.hours;
@@ -752,7 +870,7 @@ const BookingWizard = () => {
     if (!passenger.fullName || !passenger.email || !passenger.phone) {
       toast({ title: "Missing details", description: "Name, email and phone are required.", variant: "destructive" }); return;
     }
-    if (trip.serviceType === "airport_transfer" && !passenger.flightNumber.trim()) {
+    if (trip.serviceType === "airport_transfer" && trip.airportDirection === "to_airport" && !passenger.flightNumber.trim()) {
       toast({ title: "Flight number required", description: "Please enter your flight number for airport transfers.", variant: "destructive" }); return;
     }
 
@@ -765,6 +883,9 @@ const BookingWizard = () => {
       // Pre-build notes for legacy display compatibility
       const noteParts: string[] = [];
       noteParts.push(`Service: ${trip.serviceType === "chauffeur" ? "Shuttle Hire" : trip.serviceType === "point_to_point" ? "Staff Service" : "Airport Transfer"}`);
+      if (trip.serviceType === "airport_transfer") {
+        noteParts.push(`Airport: ${trip.airportDirection === "to_airport" ? "Flying TO airport" : "Flying FROM airport"}`);
+      }
       if (passenger.flightNumber) noteParts.push(`Flight: ${passenger.flightNumber}`);
       noteParts.push(`Passengers: ${trip.passengers}`);
       if (trip.luggageCheckin) noteParts.push(`${trip.serviceType === "chauffeur" ? "Large bags" : "Check-in bags"}: ${trip.luggageCheckin}`);
@@ -910,7 +1031,7 @@ const BookingWizard = () => {
             {step === 2 && (
               <VehicleSelectStep trip={trip} vehicles={vehicles} selected={selectedVehicleId}
                 onSelect={setSelectedVehicleId} onBack={() => setStep(1)}
-                onNext={() => setStep(3)} loading={loadingVehicles} />
+                onNext={() => setStep(3)} loading={loadingVehicles} isGuest={!user} />
             )}
             {step === 3 && selectedVehicle && (
               <PassengerStep trip={trip} vehicle={selectedVehicle} totalPrice={totalPrice}

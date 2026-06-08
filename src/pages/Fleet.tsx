@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { supabase } from "@/lib/supabase";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
+import VehicleDetailModal from "@/components/fleet/VehicleDetailModal";
 
 interface Vehicle {
   id: string;
@@ -17,11 +18,15 @@ interface Vehicle {
   price_per_hour: number | null;
   is_active: boolean;
   created_at: string;
+  features: string[] | null;
+  gallery_images: string[] | null;
 }
 
 const Fleet = () => {
   const [vehicles, setVehicles] = useState<Vehicle[]>([]);
   const [loading, setLoading] = useState(true);
+  const [selected, setSelected] = useState<Vehicle | null>(null);
+  const [modalOpen, setModalOpen] = useState(false);
 
   useEffect(() => {
     const fetchVehicles = async () => {
@@ -80,7 +85,8 @@ const Fleet = () => {
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
               transition={{ delay: i * 0.1 }}
-              className="rounded-2xl overflow-hidden bg-card border border-border hover:border-accent/50 hover:shadow-2xl transition-all duration-300 group flex flex-col"
+              onClick={() => { setSelected(v); setModalOpen(true); }}
+              className="cursor-pointer rounded-2xl overflow-hidden bg-card border border-border hover:border-accent/50 hover:shadow-2xl transition-all duration-300 group flex flex-col"
             >
               {/* Image */}
               <div className="aspect-[16/10] overflow-hidden relative">
@@ -114,17 +120,26 @@ const Fleet = () => {
                       </span>
                     </span>
                   </div>
-                  <p className="text-sm text-muted-foreground">
+                  <p className="text-sm text-muted-foreground line-clamp-2">
                     {v.description}
                   </p>
                 </div>
 
-                {/* CTA */}
-                <Link to="/book" className="w-full">
-                  <Button variant="accent" className="w-full" size="sm">
-                    Book Now
+                <div className="mt-auto flex items-center gap-2 pt-2">
+                  <Button
+                    variant="outline"
+                    className="flex-1"
+                    size="sm"
+                    onClick={(e) => { e.stopPropagation(); setSelected(v); setModalOpen(true); }}
+                  >
+                    See More
                   </Button>
-                </Link>
+                  <Link to="/book" className="flex-1" onClick={(e) => e.stopPropagation()}>
+                    <Button variant="accent" className="w-full" size="sm">
+                      Book Now
+                    </Button>
+                  </Link>
+                </div>
               </div>
             </motion.div>
             ))
@@ -212,6 +227,7 @@ const Fleet = () => {
       </div>
     </div>
     <Footer />
+    <VehicleDetailModal vehicle={selected} open={modalOpen} onOpenChange={setModalOpen} />
   </div>
   );
 };

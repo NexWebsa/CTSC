@@ -77,6 +77,7 @@ const TermsContent = ({ activeSection, onSectionChange }: { activeSection?: numb
         items={[
           "All bookings are subject to availability.",
           "Your booking is confirmed when you receive e-mail confirmation.",
+          "Bookings must be made at least 12 hours in advance. For bookings within 12 hours, please contact us directly via WhatsApp or email for availability.",
           "Full payment is due strictly 24 hours prior to departure, or before commencement of the service on short notice bookings. Long distance transfers must be paid in advance (no cash).",
           "Method of payment via direct bank transfer (details can be found on our invoices), card or cash.",
           "We regret that we don't accept cheques as payment.",
