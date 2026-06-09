@@ -167,9 +167,8 @@ const Footer = () => {
             </h4>
             <ul className="space-y-3.5">
               {[
-                { icon: Phone, text: "021 300 5297" },
                 { icon: Phone, text: "083 766 8601" },
-                { icon: Mail, text: "info@shuttlecapetown.co.za" },
+                { icon: Mail, text: "info@ctsctravel.com" },
               ].map(({ icon: Icon, text }) => (
                 <li
                   key={text}
@@ -185,7 +184,7 @@ const Footer = () => {
                 style={{ color: "rgba(255,255,255,0.42)", fontFamily: "'DM Sans', sans-serif" }}
               >
                 <MapPin className="w-3.5 h-3.5 shrink-0 mt-0.5" style={{ color: "#F2A51F" }} />
-                384 Voortrekker Rd, Maitland, Cape Town
+                DF Malan Street, Parow North, Cape Town, 7500
               </li>
             </ul>
           </div>
@@ -204,14 +203,14 @@ const Footer = () => {
               letterSpacing: "0.08em",
             }}
           >
-            © {currentYear} Shuttle Cape Town. All rights reserved.
+            © {currentYear} Shuttle Cape Town. Powered by <a href="https://nexwebsa.co.za/" target="_blank" rel="noopener noreferrer" style={{ color: "rgba(255,255,255,0.25)"}} >NexWeb</a>. All rights reserved.
           </span>
 
           {/* Socials */}
           <div className="flex items-center gap-1">
             {[
               {
-                href: "https://www.instagram.com/ctsctravel2026?igsh=MTQ1MnEyZndkbXd3bA==",
+                href: "https://www.instagram.com/ctsctravelcpt?igsh=MW45NjF6ZDJmOGIxeA==",
                 label: "Instagram",
                 icon: (
                   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" className="w-4 h-4">
@@ -227,15 +226,6 @@ const Footer = () => {
                 icon: (
                   <svg viewBox="0 0 24 24" fill="currentColor" className="w-4 h-4">
                     <path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z"/>
-                  </svg>
-                ),
-              },
-              {
-                href: "https://twitter.com/ZwartzSevero",
-                label: "Twitter / X",
-                icon: (
-                  <svg viewBox="0 0 24 24" fill="currentColor" className="w-4 h-4">
-                    <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/>
                   </svg>
                 ),
               },

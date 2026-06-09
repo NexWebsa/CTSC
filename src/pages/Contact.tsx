@@ -10,7 +10,6 @@ import {
   CheckCircle,
   Facebook,
   Instagram,
-  Twitter,
   Linkedin,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -18,21 +17,14 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
-import { ToastAction } from "@/components/ui/toast";
 import { useToast } from "@/hooks/use-toast";
-import { supabase } from "@/lib/supabase";
+
+const FORMSUBMIT_EMAIL = "info@ctsctravel.com";
 
 const Contact = () => {
   const { toast } = useToast();
   const [isLoading, setIsLoading] = useState(false);
   const [isSubmitted, setIsSubmitted] = useState(false);
-  const [formData, setFormData] = useState({
-    name: "",
-    email: "",
-    phone: "",
-    subject: "",
-    message: "",
-  });
 
   const contactInfo = [
     {
@@ -44,7 +36,7 @@ const Contact = () => {
     {
       icon: Mail,
       title: "Email",
-      content: "info@shuttlecapetown.com",
+      content: "info@ctsctravel.com",
       subContent: "We'll respond within 2 hours",
     },
     {
@@ -63,7 +55,7 @@ const Contact = () => {
     },
     {
       name: "Instagram",
-      url: "https://www.instagram.com/ctsctravel2026?igsh=MTQ1MnEyZndkbXd3bA==",
+      url: "https://www.instagram.com/ctsctravelcpt?igsh=MW45NjF6ZDJmOGIxeA==",
       icon: Instagram,
     },
     {
@@ -73,47 +65,55 @@ const Contact = () => {
     },
   ];
 
-  const handleChange = (
-    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>,
-  ) => {
-    const { name, value } = e.target;
-    setFormData((prev) => ({
-      ...prev,
-      [name]: value,
-    }));
-  };
-
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setIsLoading(true);
 
+    const form = e.currentTarget;
+    const formData = new FormData(form);
+
+    const payload = {
+      name: String(formData.get("name") || ""),
+      email: String(formData.get("email") || ""),
+      phone: String(formData.get("phone") || ""),
+      subject: String(formData.get("subject") || ""),
+      message: String(formData.get("message") || ""),
+      _subject: "New CTSC Travel Contact Inquiry",
+      _template: "table",
+      _captcha: "false",
+    };
+
     try {
-      const { error } = await supabase.functions.invoke("send-contact-email", {
-        body: formData,
-      });
-      if (error) throw error;
+      const response = await fetch(
+        `https://formsubmit.co/ajax/${FORMSUBMIT_EMAIL}`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Accept: "application/json",
+          },
+          body: JSON.stringify(payload),
+        },
+      );
+
+      if (!response.ok) {
+        throw new Error("FormSubmit request failed");
+      }
 
       setIsSubmitted(true);
-      setFormData({
-        name: "",
-        email: "",
-        phone: "",
-        subject: "",
-        message: "",
-      });
+      form.reset();
 
       toast({
-        title: "Message Sent!",
-        description:
-          "Thank you for contacting us. We'll get back to you shortly.",
+        title: "Thanks for your inquiry!",
+        description: "We'll get back to you soon.",
       });
-
-      setTimeout(() => setIsSubmitted(false), 3000);
     } catch (error) {
-      console.error(error);
+      console.error("Contact form error:", error);
+
       toast({
-        title: "Error",
-        description: "Failed to send message. Please try again.",
+        title: "Message not sent",
+        description:
+          "Something went wrong. Please try again or email us directly.",
         variant: "destructive",
       });
     } finally {
@@ -207,11 +207,20 @@ const Contact = () => {
                     >
                       <CheckCircle className="w-16 h-16 text-accent mx-auto mb-4" />
                       <p className="text-lg font-semibold text-foreground">
-                        Thank you for your message!
+                        Thanks for your inquiry!
                       </p>
                       <p className="text-muted-foreground mt-2">
-                        We'll get back to you shortly.
+                        We'll get back to you soon.
                       </p>
+
+                      <Button
+                        type="button"
+                        variant="outline"
+                        className="mt-6"
+                        onClick={() => setIsSubmitted(false)}
+                      >
+                        Send Another Message
+                      </Button>
                     </motion.div>
                   ) : (
                     <form onSubmit={handleSubmit} className="space-y-5">
@@ -222,13 +231,12 @@ const Contact = () => {
                           </label>
                           <Input
                             name="name"
-                            value={formData.name}
-                            onChange={handleChange}
                             placeholder="John Doe"
                             required
                             className="bg-background border-border"
                           />
                         </div>
+
                         <div>
                           <label className="block text-sm font-medium text-foreground mb-2">
                             Email
@@ -236,8 +244,6 @@ const Contact = () => {
                           <Input
                             name="email"
                             type="email"
-                            value={formData.email}
-                            onChange={handleChange}
                             placeholder="john@example.com"
                             required
                             className="bg-background border-border"
@@ -252,20 +258,17 @@ const Contact = () => {
                           </label>
                           <Input
                             name="phone"
-                            value={formData.phone}
-                            onChange={handleChange}
                             placeholder="+27 (0)21 555 0123"
                             className="bg-background border-border"
                           />
                         </div>
+
                         <div>
                           <label className="block text-sm font-medium text-foreground mb-2">
                             Subject
                           </label>
                           <Input
                             name="subject"
-                            value={formData.subject}
-                            onChange={handleChange}
                             placeholder="How can we help?"
                             required
                             className="bg-background border-border"
@@ -279,8 +282,6 @@ const Contact = () => {
                         </label>
                         <Textarea
                           name="message"
-                          value={formData.message}
-                          onChange={handleChange}
                           placeholder="Tell us more about your inquiry..."
                           required
                           rows={5}
@@ -395,6 +396,7 @@ const Contact = () => {
             </div>
           </div>
         </motion.section>
+
         <motion.div
           initial={{ opacity: 0, y: 30 }}
           whileInView={{ opacity: 1, y: 0 }}
@@ -407,8 +409,8 @@ const Contact = () => {
               Ready to Experience the Difference?
             </h3>
             <p className="text-muted-foreground max-w-2xl mx-auto">
-              Join thousands of satisfied travelers who trust Cape Town Rides
-              for their transportation needs.
+              Join thousands of satisfied travelers who trust CTSC Travel for
+              their transportation needs.
             </p>
             <Link to="/book" className="hidden sm:inline-block mt-6">
               <Button variant="hero" size="sm">

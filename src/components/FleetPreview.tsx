@@ -1,6 +1,6 @@
 import { motion, AnimatePresence } from "framer-motion";
 import { Link } from "react-router-dom";
-import { ArrowRight, Loader2, Users, Car, Luggage, Wind, Shield } from "lucide-react";
+import { ArrowRight, Loader2, Users, Car, Luggage, Wind, Shield, ChevronRight } from "lucide-react";
 import { useState, useEffect, useMemo } from "react";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/lib/supabase";
@@ -17,94 +17,73 @@ interface Vehicle {
 }
 
 /* ═══════════════════════════════════════════
-   PREMIUM VEHICLE SILHOUETTE ICONS
+   VEHICLE SILHOUETTE ICONS
    ═══════════════════════════════════════════ */
 
 const SedanIcon = ({ className = "" }: { className?: string }) => (
   <svg viewBox="0 0 120 52" fill="none" className={className} xmlns="http://www.w3.org/2000/svg">
-    {/* Body */}
     <path d="M8 38h104a4 4 0 004-4v-4c0-2-1.5-3.5-3.5-3.5h-12L88 14c-1.5-1.5-3.5-2.5-5.8-2.5H52.5c-2.5 0-4.8 1-6.5 2.7L30.5 26.5H12c-3.3 0-6 2.7-6 6v2.5c0 1.7 1.3 3 3 3z" fill="currentColor" opacity="0.15"/>
     <path d="M8 38h104a4 4 0 004-4v-4c0-2-1.5-3.5-3.5-3.5h-12L88 14c-1.5-1.5-3.5-2.5-5.8-2.5H52.5c-2.5 0-4.8 1-6.5 2.7L30.5 26.5H12c-3.3 0-6 2.7-6 6v2.5c0 1.7 1.3 3 3 3z" stroke="currentColor" strokeWidth="1.8" strokeLinejoin="round"/>
-    {/* Cabin / windows */}
     <path d="M33 26.5L47.5 14.8c1-1 2.5-1.6 4-1.6h26.5c1.4 0 2.7.5 3.6 1.4L92 26.5" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round" opacity="0.6"/>
     <line x1="56" y1="13.2" x2="56" y2="26.5" stroke="currentColor" strokeWidth="1.2" opacity="0.4"/>
-    {/* Wheels */}
     <circle cx="28" cy="38" r="7.5" fill="none" stroke="currentColor" strokeWidth="2"/>
     <circle cx="28" cy="38" r="3" fill="currentColor" opacity="0.3"/>
     <circle cx="92" cy="38" r="7.5" fill="none" stroke="currentColor" strokeWidth="2"/>
     <circle cx="92" cy="38" r="3" fill="currentColor" opacity="0.3"/>
-    {/* Headlight */}
     <ellipse cx="114" cy="32" rx="2.5" ry="1.8" fill="currentColor" opacity="0.5"/>
-    {/* Door line */}
     <path d="M62 26.5V38" stroke="currentColor" strokeWidth="1.2" opacity="0.3" strokeLinecap="round"/>
   </svg>
 );
 
 const SuvIcon = ({ className = "" }: { className?: string }) => (
   <svg viewBox="0 0 120 56" fill="none" className={className} xmlns="http://www.w3.org/2000/svg">
-    {/* Body — taller */}
     <path d="M6 42h108a4 4 0 004-4v-5c0-2-1.5-3.5-3.5-3.5h-10L94 14c-1.2-1.8-3.3-3-5.6-3H48c-2.8 0-5.3 1.3-7 3.3L26.5 29.5H10c-3.3 0-6 2.7-6 6v2.5c0 1.7 1.3 3 3 3z" fill="currentColor" opacity="0.15"/>
     <path d="M6 42h108a4 4 0 004-4v-5c0-2-1.5-3.5-3.5-3.5h-10L94 14c-1.2-1.8-3.3-3-5.6-3H48c-2.8 0-5.3 1.3-7 3.3L26.5 29.5H10c-3.3 0-6 2.7-6 6v2.5c0 1.7 1.3 3 3 3z" stroke="currentColor" strokeWidth="1.8" strokeLinejoin="round"/>
-    {/* Windows */}
     <path d="M29.5 29.5L43 15.5c1-1.2 2.5-1.9 4.2-1.9h24c1.5 0 3 .6 4 1.6L89 29.5" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round" opacity="0.6"/>
     <line x1="56" y1="13.6" x2="56" y2="29.5" stroke="currentColor" strokeWidth="1.2" opacity="0.4"/>
     <line x1="72" y1="13.6" x2="72" y2="29.5" stroke="currentColor" strokeWidth="1.2" opacity="0.4"/>
-    {/* Wheels — bigger */}
     <circle cx="28" cy="42" r="8.5" fill="none" stroke="currentColor" strokeWidth="2"/>
     <circle cx="28" cy="42" r="3.5" fill="currentColor" opacity="0.3"/>
     <circle cx="92" cy="42" r="8.5" fill="none" stroke="currentColor" strokeWidth="2"/>
     <circle cx="92" cy="42" r="3.5" fill="currentColor" opacity="0.3"/>
-    {/* Roof rails */}
     <path d="M38 11h44" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" opacity="0.5"/>
-    {/* Headlight */}
     <ellipse cx="114" cy="34" rx="2.5" ry="2" fill="currentColor" opacity="0.5"/>
   </svg>
 );
 
 const VanIcon = ({ className = "" }: { className?: string }) => (
   <svg viewBox="0 0 130 58" fill="none" className={className} xmlns="http://www.w3.org/2000/svg">
-    {/* Boxy body */}
     <path d="M4 44h122a3 3 0 003-3v-6c0-2-1.5-3.5-3.5-3.5h-8L108 10c-1-2-3-3.5-5.5-3.5H18c-3.3 0-6 2.7-6 6v28.5c0 1.7 1.3 3 3 3z" fill="currentColor" opacity="0.15"/>
     <path d="M4 44h122a3 3 0 003-3v-6c0-2-1.5-3.5-3.5-3.5h-8L108 10c-1-2-3-3.5-5.5-3.5H18c-3.3 0-6 2.7-6 6v28.5c0 1.7 1.3 3 3 3z" stroke="currentColor" strokeWidth="1.8" strokeLinejoin="round"/>
-    {/* Side windows */}
     <rect x="12" y="12" width="16" height="14" rx="1.5" stroke="currentColor" strokeWidth="1.3" opacity="0.5"/>
     <rect x="32" y="12" width="16" height="14" rx="1.5" stroke="currentColor" strokeWidth="1.3" opacity="0.5"/>
     <rect x="52" y="12" width="16" height="14" rx="1.5" stroke="currentColor" strokeWidth="1.3" opacity="0.5"/>
     <rect x="72" y="12" width="16" height="14" rx="1.5" stroke="currentColor" strokeWidth="1.3" opacity="0.5"/>
-    {/* Front windshield */}
     <path d="M94 12l10 14h12.5" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round" opacity="0.5"/>
-    {/* Wheels */}
     <circle cx="30" cy="44" r="8.5" fill="none" stroke="currentColor" strokeWidth="2"/>
     <circle cx="30" cy="44" r="3.5" fill="currentColor" opacity="0.3"/>
     <circle cx="100" cy="44" r="8.5" fill="none" stroke="currentColor" strokeWidth="2"/>
     <circle cx="100" cy="44" r="3.5" fill="currentColor" opacity="0.3"/>
-    {/* Headlight */}
     <ellipse cx="124" cy="34" rx="2.5" ry="2" fill="currentColor" opacity="0.5"/>
   </svg>
 );
 
 const MinibusIcon = ({ className = "" }: { className?: string }) => (
   <svg viewBox="0 0 150 60" fill="none" className={className} xmlns="http://www.w3.org/2000/svg">
-    {/* Long body */}
     <path d="M4 46h142a3 3 0 003-3v-6c0-2-1.5-3.5-3.5-3.5h-7L128 10c-1-2-3-3.5-5.5-3.5H18c-3.3 0-6 2.7-6 6v30.5c0 1.7 1.3 3 3 3z" fill="currentColor" opacity="0.15"/>
     <path d="M4 46h142a3 3 0 003-3v-6c0-2-1.5-3.5-3.5-3.5h-7L128 10c-1-2-3-3.5-5.5-3.5H18c-3.3 0-6 2.7-6 6v30.5c0 1.7 1.3 3 3 3z" stroke="currentColor" strokeWidth="1.8" strokeLinejoin="round"/>
-    {/* Many windows */}
     <rect x="10" y="12" width="14" height="15" rx="1.5" stroke="currentColor" strokeWidth="1.3" opacity="0.5"/>
     <rect x="28" y="12" width="14" height="15" rx="1.5" stroke="currentColor" strokeWidth="1.3" opacity="0.5"/>
     <rect x="46" y="12" width="14" height="15" rx="1.5" stroke="currentColor" strokeWidth="1.3" opacity="0.5"/>
     <rect x="64" y="12" width="14" height="15" rx="1.5" stroke="currentColor" strokeWidth="1.3" opacity="0.5"/>
     <rect x="82" y="12" width="14" height="15" rx="1.5" stroke="currentColor" strokeWidth="1.3" opacity="0.5"/>
     <rect x="100" y="12" width="14" height="15" rx="1.5" stroke="currentColor" strokeWidth="1.3" opacity="0.5"/>
-    {/* Front windshield */}
     <path d="M120 12l10 15h12" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round" opacity="0.5"/>
-    {/* Wheels */}
     <circle cx="34" cy="46" r="9" fill="none" stroke="currentColor" strokeWidth="2"/>
     <circle cx="34" cy="46" r="4" fill="currentColor" opacity="0.3"/>
     <circle cx="116" cy="46" r="9" fill="none" stroke="currentColor" strokeWidth="2"/>
     <circle cx="116" cy="46" r="4" fill="currentColor" opacity="0.3"/>
-    {/* Side mirror */}
     <rect x="127" y="18" width="3" height="5" rx="1" fill="currentColor" opacity="0.4"/>
-    {/* Headlight */}
     <ellipse cx="144" cy="35" rx="2.5" ry="2" fill="currentColor" opacity="0.5"/>
   </svg>
 );
@@ -150,218 +129,345 @@ const FleetPreview = () => {
   );
 
   return (
-    <section className="section-padding bg-background overflow-hidden">
-      <div className="container mx-auto">
-        {/* Header */}
+    <section className="section-padding bg-background overflow-hidden relative">
+
+      {/* Subtle ambient glow behind section */}
+      <div
+        className="absolute inset-0 pointer-events-none"
+        style={{
+          background:
+            "radial-gradient(ellipse 70% 50% at 50% 0%, hsl(var(--accent)/0.04) 0%, transparent 70%)",
+        }}
+      />
+
+      <div className="container mx-auto relative">
+
+        {/* ═══════ HEADER ═══════ */}
         <motion.div
-          initial={{ opacity: 0, y: 20 }}
+          initial={{ opacity: 0, y: 24 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
-          transition={{ duration: 0.6 }}
-          className="text-center mb-14"
+          transition={{ duration: 0.65, ease: "easeOut" }}
+          className="text-center mb-16"
         >
-          <span className="inline-flex items-center gap-2 text-xs font-semibold tracking-[0.2em] uppercase text-accent bg-accent/8 border border-accent/20 px-4 py-1.5 rounded-full">
+          <span className="inline-flex items-center gap-2 text-[10px] font-bold tracking-[0.25em] uppercase text-accent bg-accent/8 border border-accent/20 px-4 py-1.5 rounded-full mb-5">
+            <span className="w-1 h-1 rounded-full bg-accent animate-pulse" />
             Our Fleet
           </span>
-          <h2 className="text-3xl sm:text-5xl font-bold text-foreground mt-5 leading-tight">
-            Choose Your Ride
+          <h2 className="text-4xl sm:text-5xl lg:text-6xl font-bold text-foreground leading-[1.05] tracking-tight">
+            Choose Your{" "}
+            <span
+              className="relative inline-block"
+              style={{ color: "hsl(var(--accent))" }}
+            >
+              Ride
+              {/* Underline accent */}
+              <motion.span
+                initial={{ scaleX: 0 }}
+                whileInView={{ scaleX: 1 }}
+                viewport={{ once: true }}
+                transition={{ delay: 0.4, duration: 0.5, ease: "easeOut" }}
+                className="absolute -bottom-1 left-0 right-0 h-0.5 origin-left rounded-full"
+                style={{ background: "hsl(var(--accent)/0.5)" }}
+              />
+            </span>
           </h2>
-          <p className="text-muted-foreground max-w-2xl mx-auto mt-4 text-base leading-relaxed">
-            From sleek sedans to spacious minibuses — every vehicle is fully licensed,
-            insured, and meticulously maintained for your comfort across Cape Town.
+          <p className="text-muted-foreground max-w-xl mx-auto mt-5 text-base leading-relaxed">
+            Every vehicle is fully licensed, insured, and meticulously
+            maintained from sleek sedans to spacious minibuses.
           </p>
         </motion.div>
 
         {loading ? (
-          <div className="flex items-center justify-center py-24">
+          <div className="flex items-center justify-center py-32">
             <Loader2 className="w-7 h-7 animate-spin text-accent" />
           </div>
         ) : vehicles.length === 0 ? (
-          <p className="text-center text-muted-foreground py-12">No vehicles available.</p>
+          <p className="text-center text-muted-foreground py-16">
+            No vehicles available.
+          </p>
         ) : (
-          <div className="max-w-6xl mx-auto">
+          <motion.div
+            initial={{ opacity: 0, y: 32 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.6, delay: 0.1 }}
+            className="max-w-6xl mx-auto"
+          >
 
             {/* ═══════ ICON SELECTOR ═══════ */}
-            <div className="mb-4 flex items-center gap-2 text-xs text-muted-foreground">
-              <span className="inline-block w-1.5 h-1.5 rounded-full bg-accent animate-pulse" />
-              <span className="italic">Click a vehicle to view details</span>
-            </div>
+            <div
+              className="rounded-2xl border border-border/60 p-5 sm:p-6 mb-6"
+              style={{
+                background:
+                  "linear-gradient(135deg, hsl(var(--card)/0.6) 0%, hsl(var(--card)/0.3) 100%)",
+                backdropFilter: "blur(12px)",
+              }}
+            >
+              {/* Hint label */}
+              <div className="flex items-center gap-2 text-[11px] text-muted-foreground mb-4 px-0.5">
+                <span className="w-1.5 h-1.5 rounded-full bg-accent/70 animate-pulse flex-shrink-0" />
+                <span className="italic">Select a vehicle to preview</span>
+              </div>
 
-            <div className="rounded-2xl border border-border bg-card/40 backdrop-blur-sm p-5 sm:p-7 mb-8">
-              <div className="flex items-end justify-start sm:justify-center gap-4 sm:gap-6 overflow-x-auto pb-2">
-                {vehicles.map((v) => {
+              {/*
+                KEY FIX: use a CSS grid that wraps naturally.
+                - grid-cols-4 on mobile → 3 rows of ~4 cars = all 11 visible
+                - grid-cols-6 on sm → 2 rows
+                - grid-cols-11 on lg (or auto-fit) → single row when there's room
+                This means nothing is ever clipped regardless of count.
+              */}
+              <div className="grid grid-cols-4 sm:grid-cols-6 lg:grid-cols-11 gap-2 sm:gap-3">
+                {vehicles.map((v, idx) => {
                   const Icon = pickIcon(v.capacity);
                   const isActive = selected?.id === v.id;
                   return (
-                    <button
+                    <motion.button
                       key={v.id}
+                      initial={{ opacity: 0, y: 10 }}
+                      whileInView={{ opacity: 1, y: 0 }}
+                      viewport={{ once: true }}
+                      transition={{ delay: idx * 0.04, duration: 0.35 }}
                       onClick={() => setSelectedId(v.id)}
-                      className="group flex flex-col items-center gap-3 flex-shrink-0 transition-all duration-300"
-                      style={{ width: "110px" }}
+                      className="group flex flex-col items-center gap-2 relative focus:outline-none focus-visible:ring-2 focus-visible:ring-accent rounded-xl"
                     >
                       {/* Icon container */}
                       <div
-                        className={`relative w-full aspect-[2.3/1] flex items-center justify-center rounded-xl transition-all duration-300 px-3 py-2 ${
+                        className={`relative w-full rounded-xl transition-all duration-300 flex items-center justify-center px-2 py-2.5 ${
                           isActive
-                            ? "bg-accent/[0.08] border-2 border-accent text-accent shadow-[0_0_28px_-8px_hsl(var(--accent)/0.5)]"
-                            : "bg-secondary/40 border border-transparent text-muted-foreground/60 group-hover:text-foreground group-hover:bg-secondary/70"
+                            ? "text-accent border-2 border-accent shadow-[0_0_20px_-6px_hsl(var(--accent)/0.6)]"
+                            : "border border-border/50 text-muted-foreground/50 group-hover:text-foreground/70 group-hover:border-border"
                         }`}
+                        style={{
+                          background: isActive
+                            ? "hsl(var(--accent)/0.08)"
+                            : "hsl(var(--secondary)/0.3)",
+                          aspectRatio: "2.2 / 1",
+                        }}
                       >
                         <Icon className="w-full h-full" />
-                        {/* Active indicator dot */}
+                        {/* Active dot */}
                         {isActive && (
                           <motion.span
                             layoutId="fleet-active-dot"
-                            className="absolute -bottom-1.5 left-1/2 -translate-x-1/2 w-1.5 h-1.5 rounded-full bg-accent"
+                            className="absolute -bottom-1.5 left-1/2 -translate-x-1/2 w-1.5 h-1.5 rounded-full bg-accent shadow-[0_0_6px_hsl(var(--accent))]"
                           />
                         )}
                       </div>
-                      {/* Vehicle name — allow wrap, proper line-height */}
+                      {/* Name label */}
                       <span
-                        className={`text-[11px] sm:text-xs font-semibold text-center leading-snug transition-colors px-1 ${
+                        className={`text-[10px] leading-tight text-center font-medium transition-colors px-0.5 line-clamp-2 ${
                           isActive
                             ? "text-accent"
-                            : "text-muted-foreground group-hover:text-foreground"
+                            : "text-muted-foreground/60 group-hover:text-foreground/70"
                         }`}
-                        style={{ wordBreak: "break-word", hyphens: "auto" }}
                       >
                         {v.name}
                       </span>
-                    </button>
+                    </motion.button>
                   );
                 })}
               </div>
             </div>
 
-            {/* ═══════ SHOWCASE ═══════ */}
+            {/* ═══════ SHOWCASE CARD ═══════ */}
             <AnimatePresence mode="wait">
               {selected && (
                 <motion.div
                   key={selected.id}
-                  initial={{ opacity: 0, y: 24 }}
+                  initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, y: -12 }}
-                  transition={{ duration: 0.45, ease: "easeOut" }}
-                  className="grid grid-cols-1 lg:grid-cols-5 gap-8 lg:gap-10 rounded-2xl border border-border bg-gradient-to-br from-card to-card/40 p-6 sm:p-10 items-center"
+                  exit={{ opacity: 0, y: -10 }}
+                  transition={{ duration: 0.4, ease: "easeOut" }}
+                  className="relative rounded-2xl overflow-hidden border border-border/60"
+                  style={{
+                    background:
+                      "linear-gradient(135deg, hsl(var(--card)) 0%, hsl(var(--card)/0.7) 100%)",
+                  }}
                 >
-                  {/* ── Image ── */}
-                  <div className="lg:col-span-3 relative aspect-[16/10] rounded-xl overflow-hidden bg-secondary">
-                    {selected.image_url ? (
-                      <motion.img
-                        key={selected.image_url}
-                        initial={{ scale: 1.05, opacity: 0 }}
-                        animate={{ scale: 1, opacity: 1 }}
-                        transition={{ duration: 0.6 }}
-                        src={selected.image_url}
-                        alt={selected.name}
-                        className="w-full h-full object-cover"
-                        loading="lazy"
-                      />
-                    ) : (
-                      <div className="w-full h-full flex items-center justify-center text-muted-foreground">
-                        <Car className="w-16 h-16 opacity-30" />
-                      </div>
-                    )}
-                    <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent pointer-events-none" />
-                    {/* Capacity badge on image */}
-                    <div className="absolute bottom-4 left-4">
-                      <span className="inline-flex items-center gap-1.5 bg-black/60 backdrop-blur-md text-white px-3 py-1.5 rounded-lg text-xs font-medium border border-white/10">
-                        <Users className="w-3.5 h-3.5" />
-                        Up to {selected.capacity} passengers
-                      </span>
-                    </div>
-                  </div>
+                  {/* Top accent line */}
+                  <div
+                    className="absolute top-0 left-0 right-0 h-px"
+                    style={{
+                      background:
+                        "linear-gradient(90deg, transparent, hsl(var(--accent)/0.5), transparent)",
+                    }}
+                  />
 
-                  {/* ── Details ── */}
-                  <div className="lg:col-span-2 space-y-6">
-                    <div>
-                      <motion.h3
-                        initial={{ opacity: 0, x: 12 }}
-                        animate={{ opacity: 1, x: 0 }}
-                        transition={{ delay: 0.1 }}
-                        className="text-2xl sm:text-3xl font-bold text-accent tracking-tight"
-                      >
-                        {selected.name}
-                      </motion.h3>
-                      {selected.description && (
-                        <motion.p
-                          initial={{ opacity: 0 }}
-                          animate={{ opacity: 1 }}
-                          transition={{ delay: 0.2 }}
-                          className="text-sm text-foreground/85 mt-3 leading-relaxed"
-                        >
-                          {selected.description}
-                        </motion.p>
-                      )}
-                    </div>
+                  <div className="grid grid-cols-1 lg:grid-cols-5 gap-0">
 
-                    {/* Feature icons row */}
-                    <motion.div
-                      initial={{ opacity: 0 }}
-                      animate={{ opacity: 1 }}
-                      transition={{ delay: 0.25 }}
-                      className="flex items-center gap-4"
-                    >
-                      <span className="flex items-center gap-1.5 text-xs text-muted-foreground">
-                        <Luggage className="w-3.5 h-3.5" />
-                        Ample luggage
-                      </span>
-                      <span className="flex items-center gap-1.5 text-xs text-muted-foreground">
-                        <Wind className="w-3.5 h-3.5" />
-                        Climate control
-                      </span>
-                      <span className="flex items-center gap-1.5 text-xs text-muted-foreground">
-                        <Shield className="w-3.5 h-3.5" />
-                        Fully insured
-                      </span>
-                    </motion.div>
+                    {/* ── Image panel ── */}
+                    <div className="lg:col-span-3 relative">
+                      <div className="aspect-[16/10] lg:aspect-auto lg:h-full min-h-[240px] relative overflow-hidden">
+                        {selected.image_url ? (
+                          <motion.img
+                            key={selected.image_url}
+                            initial={{ scale: 1.06, opacity: 0 }}
+                            animate={{ scale: 1, opacity: 1 }}
+                            transition={{ duration: 0.65, ease: "easeOut" }}
+                            src={selected.image_url}
+                            alt={selected.name}
+                            className="w-full h-full object-cover"
+                            loading="lazy"
+                          />
+                        ) : (
+                          <div className="w-full h-full flex items-center justify-center bg-secondary/30">
+                            <Car className="w-20 h-20 opacity-20 text-muted-foreground" />
+                          </div>
+                        )}
 
-                    {/* Features list */}
-                    {selected.features && selected.features.length > 0 && (
-                      <ul className="space-y-2.5">
-                        {selected.features.slice(0, 6).map((f, i) => (
-                          <motion.li
-                            key={i}
-                            initial={{ opacity: 0, x: -10 }}
+                        {/* Layered gradients for depth */}
+                        <div className="absolute inset-0 bg-gradient-to-r from-transparent via-transparent to-black/50 pointer-events-none hidden lg:block" />
+                        <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/10 to-transparent pointer-events-none" />
+
+                        {/* Capacity badge */}
+                        <div className="absolute bottom-4 left-4">
+                          <motion.span
+                            initial={{ opacity: 0, x: -8 }}
                             animate={{ opacity: 1, x: 0 }}
-                            transition={{ delay: 0.2 + i * 0.05 }}
-                            className="flex items-start gap-3 text-sm text-foreground leading-snug"
+                            transition={{ delay: 0.2 }}
+                            className="inline-flex items-center gap-1.5 bg-black/55 backdrop-blur-md text-white px-3 py-1.5 rounded-lg text-xs font-medium border border-white/10"
                           >
-                            <span className="mt-1 w-1.5 h-1.5 rounded-full bg-accent flex-shrink-0 shadow-[0_0_6px_hsl(var(--accent)/0.6)]" />
-                            <span>{f}</span>
-                          </motion.li>
-                        ))}
-                      </ul>
-                    )}
+                            <Users className="w-3.5 h-3.5 text-accent" />
+                            Up to {selected.capacity} passengers
+                          </motion.span>
+                        </div>
 
-                    <div className="pt-1">
-                      <Link to="/book">
-                        <Button
-                          variant="accent"
-                          className="gap-2 rounded-xl font-semibold shadow-lg shadow-accent/20 hover:shadow-accent/30 transition-shadow"
+                        {/* Vehicle name overlay on image (mobile) */}
+                        <div className="absolute bottom-4 right-4 lg:hidden">
+                          <motion.span
+                            initial={{ opacity: 0 }}
+                            animate={{ opacity: 1 }}
+                            transition={{ delay: 0.15 }}
+                            className="text-white font-bold text-lg drop-shadow-lg"
+                          >
+                            {selected.name}
+                          </motion.span>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* ── Details panel ── */}
+                    <div className="lg:col-span-2 flex flex-col justify-between p-6 sm:p-8 gap-6">
+
+                      {/* Name + description */}
+                      <div>
+                        <motion.div
+                          initial={{ opacity: 0, x: 14 }}
+                          animate={{ opacity: 1, x: 0 }}
+                          transition={{ delay: 0.1 }}
+                          className="hidden lg:block"
                         >
-                          Book {selected.name.split(" ")[0]}
-                          <ArrowRight className="w-4 h-4" />
-                        </Button>
-                      </Link>
+                          <p className="text-[10px] font-bold tracking-[0.2em] uppercase text-accent/70 mb-1.5">
+                            Selected Vehicle
+                          </p>
+                          <h3 className="text-3xl font-bold text-foreground tracking-tight leading-none mb-1">
+                            {selected.name}
+                          </h3>
+                          <div
+                            className="h-0.5 w-10 mt-3 mb-4 rounded-full"
+                            style={{ background: "hsl(var(--accent)/0.6)" }}
+                          />
+                        </motion.div>
+
+                        {selected.description && (
+                          <motion.p
+                            initial={{ opacity: 0 }}
+                            animate={{ opacity: 1 }}
+                            transition={{ delay: 0.18 }}
+                            className="text-sm text-foreground/75 leading-relaxed"
+                          >
+                            {selected.description}
+                          </motion.p>
+                        )}
+                      </div>
+
+                      {/* Quick spec pills */}
+                      <motion.div
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        transition={{ delay: 0.22 }}
+                        className="flex flex-wrap gap-2"
+                      >
+                        {[
+                          { icon: Luggage, label: "Ample luggage" },
+                          { icon: Wind, label: "Climate control" },
+                          { icon: Shield, label: "Fully insured" },
+                        ].map(({ icon: Icon, label }) => (
+                          <span
+                            key={label}
+                            className="inline-flex items-center gap-1.5 text-[11px] font-medium text-muted-foreground border border-border/60 rounded-lg px-2.5 py-1.5 bg-secondary/30"
+                          >
+                            <Icon className="w-3 h-3 text-accent/70" />
+                            {label}
+                          </span>
+                        ))}
+                      </motion.div>
+
+                      {/* Feature list */}
+                      {selected.features && selected.features.length > 0 && (
+                        <ul className="space-y-2">
+                          {selected.features.slice(0, 5).map((f, i) => (
+                            <motion.li
+                              key={i}
+                              initial={{ opacity: 0, x: -8 }}
+                              animate={{ opacity: 1, x: 0 }}
+                              transition={{ delay: 0.2 + i * 0.06 }}
+                              className="flex items-center gap-3 text-sm text-foreground/80"
+                            >
+                              <ChevronRight
+                                className="w-3.5 h-3.5 flex-shrink-0"
+                                style={{ color: "hsl(var(--accent)/0.8)" }}
+                              />
+                              <span>{f}</span>
+                            </motion.li>
+                          ))}
+                        </ul>
+                      )}
+
+                      {/* CTA */}
+                      <motion.div
+                        initial={{ opacity: 0, y: 8 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ delay: 0.3 }}
+                      >
+                        <Link to="/book">
+                          <Button
+                            variant="accent"
+                            className="w-full sm:w-auto gap-2 rounded-xl font-semibold shadow-lg shadow-accent/20 hover:shadow-accent/35 transition-all hover:-translate-y-0.5"
+                          >
+                            Book {selected.name.split(" ")[0]}
+                            <ArrowRight className="w-4 h-4" />
+                          </Button>
+                        </Link>
+                      </motion.div>
                     </div>
                   </div>
                 </motion.div>
               )}
             </AnimatePresence>
 
-            <div className="text-center mt-12">
+            {/* ═══════ FOOTER CTA ═══════ */}
+            <motion.div
+              initial={{ opacity: 0 }}
+              whileInView={{ opacity: 1 }}
+              viewport={{ once: true }}
+              transition={{ delay: 0.2 }}
+              className="text-center mt-10"
+            >
               <Link to="/fleet">
                 <Button
                   variant="outline"
                   size="lg"
-                  className="gap-2 font-semibold rounded-xl hover:border-accent/40 hover:text-accent transition-colors"
+                  className="gap-2 font-semibold rounded-xl hover:border-accent/50 hover:text-white transition-all hover:-translate-y-0.5"
                 >
-                  View Full Fleet <ArrowRight className="w-4 h-4" />
+                  View Full Fleet
+                  <ArrowRight className="w-4 h-4" />
                 </Button>
               </Link>
-            </div>
-          </div>
+            </motion.div>
+
+          </motion.div>
         )}
       </div>
     </section>

@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { useAuth } from "@/contexts/AuthContext";
 import { useAdminCheck } from "@/hooks/useAdminCheck";
 import { useDriverCheck } from "@/hooks/useDriverCheck";
-import logo from "@/assets/ctsc.png";
+import logo from "@/assets/ctscnav.png";
 
 const navLinks = [
   { label: "Home", path: "/" },

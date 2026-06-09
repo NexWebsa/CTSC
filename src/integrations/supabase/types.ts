@@ -307,6 +307,7 @@ export type Database = {
           is_active: boolean
           name: string
           sort_order: number
+          vehicle_prices: Json | null
         }
         Insert: {
           category?: string | null
@@ -315,6 +316,7 @@ export type Database = {
           is_active?: boolean
           name: string
           sort_order?: number
+          vehicle_prices?: Json | null
         }
         Update: {
           category?: string | null
@@ -323,6 +325,7 @@ export type Database = {
           is_active?: boolean
           name?: string
           sort_order?: number
+          vehicle_prices?: Json | null
         }
         Relationships: []
       }
@@ -411,6 +414,7 @@ export type Database = {
           name: string
           price_per_hour: number | null
           price_per_km: number | null
+          slug: string | null
         }
         Insert: {
           capacity: number
@@ -424,6 +428,7 @@ export type Database = {
           name: string
           price_per_hour?: number | null
           price_per_km?: number | null
+          slug?: string | null
         }
         Update: {
           capacity?: number
@@ -437,6 +442,7 @@ export type Database = {
           name?: string
           price_per_hour?: number | null
           price_per_km?: number | null
+          slug?: string | null
         }
         Relationships: []
       }

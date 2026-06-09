@@ -5,6 +5,7 @@
 export interface Vehicle {
   id: string;
   name: string;
+  slug?: string | null;
   capacity: number;
   price_per_km: number | null;
   price_per_hour: number | null;
@@ -22,6 +23,8 @@ export interface QuoteInput {
   serviceType: "airport_transfer" | "point_to_point" | "chauffeur";
   hours?: number;
   extrasTotal?: number; // sum of selected add-ons (incl. extra-stop fee)
+  /** Per-vehicle POI rate-card price (Shuttle Hire). When set, base = poiPrice. */
+  poiPrice?: number | null;
 }
 
 // --- Base rates -------------------------------------------------------------
@@ -107,12 +110,17 @@ export function lookupTablePrice(vehicleName: string, distanceKm: number): numbe
 }
 
 export function quoteVehicle(vehicle: Vehicle, input: QuoteInput): number {
-  // Chauffeur / hourly hire keeps its own model
-  if (input.serviceType === "chauffeur" && input.hours) {
-    const perHour = vehicle.price_per_hour ?? DEFAULT_PER_HOUR;
-    let total = perHour * input.hours;
-    total += input.extrasTotal ?? 0;
-    return roundUp(Math.max(MIN_FARE, total));
+  // Chauffeur / Shuttle Hire: prefer POI rate-card price for this vehicle.
+  if (input.serviceType === "chauffeur") {
+    if (input.poiPrice && input.poiPrice > 0) {
+      return roundUp((input.poiPrice ?? 0) + (input.extrasTotal ?? 0));
+    }
+    if (input.hours) {
+      const perHour = vehicle.price_per_hour ?? DEFAULT_PER_HOUR;
+      let total = perHour * input.hours;
+      total += input.extrasTotal ?? 0;
+      return roundUp(Math.max(MIN_FARE, total));
+    }
   }
 
   // Distance-based pricing — use the rate-card table whenever vehicle maps

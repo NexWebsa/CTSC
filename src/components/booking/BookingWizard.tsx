@@ -206,27 +206,52 @@ const ExtrasSection = ({ trip, setTrip }: { trip: TripData; setTrip: (t: TripDat
 
 const CUSTOM_POI = "Custom (Please specify in notes)";
 
+export interface PoiOption {
+  name: string;
+  category: string | null;
+  vehicle_prices: Record<string, number>;
+}
+
 const usePointsOfInterest = () => {
-  const [points, setPoints] = useState<string[]>([]);
+  const [points, setPoints] = useState<PoiOption[]>([]);
   useEffect(() => {
     let cancelled = false;
     (async () => {
       const { data, error } = await supabase
         .from("points_of_interest")
-        .select("name")
+        .select("name, category, vehicle_prices")
         .eq("is_active", true)
         .order("sort_order", { ascending: true });
       if (cancelled) return;
+      const custom: PoiOption = { name: CUSTOM_POI, category: null, vehicle_prices: {} };
       if (error || !data) {
-        setPoints([CUSTOM_POI]);
+        setPoints([custom]);
         return;
       }
-      setPoints([...data.map((p) => p.name as string), CUSTOM_POI]);
+      setPoints([
+        ...data.map((p: any) => ({
+          name: p.name as string,
+          category: (p.category as string) ?? null,
+          vehicle_prices: (p.vehicle_prices as Record<string, number>) ?? {},
+        })),
+        custom,
+      ]);
     })();
     return () => { cancelled = true; };
   }, []);
   return points;
 };
+
+/** Resolve the POI rate-card price for a given vehicle (by slug). */
+export const getPoiPriceForVehicle = (
+  poi: PoiOption | undefined,
+  vehicle: Pick<Vehicle, "slug" | "name">,
+): number | null => {
+  if (!poi || !vehicle?.slug) return null;
+  const v = poi.vehicle_prices?.[vehicle.slug];
+  return typeof v === "number" && v > 0 ? v : null;
+};
+
 
 // Support contact info
 const SUPPORT_CONTACT = {
@@ -382,9 +407,19 @@ const TripDetailsStep = ({ trip, setTrip, onNext, computing }: {
               <SelectValue placeholder="Please select a point of interest" />
             </SelectTrigger>
             <SelectContent>
-              {pointsOfInterest.map((point) => (
-                <SelectItem key={point} value={point}>{point}</SelectItem>
-              ))}
+              {pointsOfInterest.map((point) => {
+                const hasPrice = Object.keys(point.vehicle_prices || {}).length > 0;
+                return (
+                  <SelectItem key={point.name} value={point.name}>
+                    <span className="flex items-center gap-2">
+                      <span>{point.name}</span>
+                      {!hasPrice && point.name !== CUSTOM_POI && (
+                        <span className="text-[10px] uppercase tracking-wider text-accent font-bold">Get Quote</span>
+                      )}
+                    </span>
+                  </SelectItem>
+                );
+              })}
             </SelectContent>
           </Select>
         </div>
@@ -513,8 +548,9 @@ const TripDetailsStep = ({ trip, setTrip, onNext, computing }: {
 // ─────────────────────────────────────────────────────────────
 // Step 2 — Vehicle selection
 // ─────────────────────────────────────────────────────────────
-const VehicleSelectStep = ({ trip, vehicles, selected, onSelect, onBack, onNext, loading, isGuest }: {
-  trip: TripData; vehicles: Vehicle[]; selected: string | null;
+const VehicleSelectStep = ({ trip, vehicles, selectedPoi, selected, onSelect, onBack, onNext, loading, isGuest }: {
+  trip: TripData; vehicles: Vehicle[]; selectedPoi: PoiOption | undefined;
+  selected: string | null;
   onSelect: (id: string) => void; onBack: () => void; onNext: () => void; loading: boolean; isGuest: boolean;
 }) => (
   <div className="space-y-6">
@@ -527,7 +563,7 @@ const VehicleSelectStep = ({ trip, vehicles, selected, onSelect, onBack, onNext,
       </div>
       <div className="space-y-0.5">
         <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">To</p>
-        <p className="font-medium truncate">{trip.dropoff}</p>
+        <p className="font-medium truncate">{trip.serviceType === "chauffeur" ? (trip.pointsOfInterest || trip.dropoff) : trip.dropoff}</p>
       </div>
       <div className="space-y-0.5">
         <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">When</p>
@@ -553,22 +589,28 @@ const VehicleSelectStep = ({ trip, vehicles, selected, onSelect, onBack, onNext,
     ) : (
       <div className="grid sm:grid-cols-2 gap-4">
         {vehicles.map(v => {
-          const price = quoteVehicle(v, {
+          const isChauffeur = trip.serviceType === "chauffeur";
+          const poiPrice = isChauffeur ? getPoiPriceForVehicle(selectedPoi, v) : null;
+          const isCustomPoi = isChauffeur && trip.pointsOfInterest === CUSTOM_POI;
+          const needsQuote = isChauffeur && !poiPrice && !isCustomPoi;
+          const price = needsQuote ? 0 : quoteVehicle(v, {
             distanceKm: trip.distanceKm ?? 0,
             durationMinutes: trip.durationMinutes ?? 0,
             isReturn: trip.direction === "return",
             serviceType: trip.serviceType,
             hours: trip.hours,
             extrasTotal: computeExtrasTotal(trip.extras, trip.extraStop),
+            poiPrice,
           });
           const tooSmall = v.capacity < trip.passengers;
+          const disabled = tooSmall || needsQuote;
           const sel = selected === v.id;
           return (
-            <button key={v.id} type="button" disabled={tooSmall} onClick={() => onSelect(v.id)}
+            <button key={v.id} type="button" disabled={disabled} onClick={() => onSelect(v.id)}
               className={cn(
                 "text-left rounded-2xl border bg-card overflow-hidden transition-all",
                 sel ? "border-accent ring-2 ring-accent/30 shadow-lg" : "border-border hover:border-accent/40",
-                tooSmall && "opacity-40 cursor-not-allowed"
+                disabled && "opacity-40 cursor-not-allowed"
               )}>
               <div className="aspect-[16/9] bg-secondary/40 overflow-hidden">
                 {v.image_url ? <img src={v.image_url} alt={v.name} className="w-full h-full object-cover" />
@@ -584,10 +626,17 @@ const VehicleSelectStep = ({ trip, vehicles, selected, onSelect, onBack, onNext,
                   </div>
                   <div className="text-right">
                     <p className="text-[10px] text-muted-foreground uppercase tracking-wider">Total</p>
-                    <p className="text-xl font-bold text-accent">{formatZAR(price)}</p>
+                    {needsQuote ? (
+                      <p className="text-sm font-bold text-accent">Get a quote</p>
+                    ) : (
+                      <p className="text-xl font-bold text-accent">{formatZAR(price)}</p>
+                    )}
                   </div>
                 </div>
                 {tooSmall && <p className="text-xs text-destructive">Not enough seats for {trip.passengers} passengers</p>}
+                {needsQuote && !tooSmall && (
+                  <p className="text-xs text-muted-foreground">Contact us via WhatsApp or email for a custom quote.</p>
+                )}
                 {sel && <p className="text-xs font-semibold text-accent flex items-center gap-1"><Check className="w-3 h-3" /> Selected</p>}
               </div>
             </button>
@@ -650,7 +699,7 @@ const PassengerStep = ({
           {isAirport && trip.airportDirection === "to_airport" && (
             <div className="space-y-1.5 sm:col-span-2">
               <Label className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider flex items-center gap-1.5">
-                <Plane className="w-3.5 h-3.5" /> Flight number *
+                <Plane className="w-3.5 h-3.5" /> Flight number (optional)
               </Label>
               <Input value={passenger.flightNumber} onChange={(e) => update("flightNumber", e.target.value)} placeholder="e.g. BA 6231" className="h-11" />
             </div>
@@ -658,9 +707,9 @@ const PassengerStep = ({
           {isAirport && trip.airportDirection === "from_airport" && (
             <div className="space-y-1.5 sm:col-span-2">
               <Label className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider flex items-center gap-1.5">
-                <Plane className="w-3.5 h-3.5" /> Flight number (optional)
+                <Plane className="w-3.5 h-3.5" /> Flight number *
               </Label>
-              <Input value={passenger.flightNumber} onChange={(e) => update("flightNumber", e.target.value)} placeholder="e.g. BA 6231" className="h-11" />
+              <Input required value={passenger.flightNumber} onChange={(e) => update("flightNumber", e.target.value)} placeholder="e.g. BA 6231" className="h-11" />
             </div>
           )}
 
@@ -857,21 +906,31 @@ const BookingWizard = () => {
     }
   };
 
+  const pointsOfInterest = usePointsOfInterest();
+  const selectedPoi = useMemo(
+    () => pointsOfInterest.find(p => p.name === trip.pointsOfInterest),
+    [pointsOfInterest, trip.pointsOfInterest],
+  );
   const selectedVehicle = useMemo(() => vehicles.find(v => v.id === selectedVehicleId), [vehicles, selectedVehicleId]);
   const extrasTotal = useMemo(() => computeExtrasTotal(trip.extras, trip.extraStop), [trip.extras, trip.extraStop]);
+  const poiPrice = useMemo(
+    () => (trip.serviceType === "chauffeur" && selectedVehicle ? getPoiPriceForVehicle(selectedPoi, selectedVehicle) : null),
+    [trip.serviceType, selectedPoi, selectedVehicle],
+  );
   const totalPrice = useMemo(() => selectedVehicle ? quoteVehicle(selectedVehicle, {
     distanceKm: trip.distanceKm ?? 0, durationMinutes: trip.durationMinutes ?? 0,
     isReturn: trip.direction === "return",
     serviceType: trip.serviceType, hours: trip.hours,
     extrasTotal,
-  }) : 0, [selectedVehicle, trip, extrasTotal]);
+    poiPrice,
+  }) : 0, [selectedVehicle, trip, extrasTotal, poiPrice]);
 
   const submitBooking = async () => {
     if (!passenger.fullName || !passenger.email || !passenger.phone) {
       toast({ title: "Missing details", description: "Name, email and phone are required.", variant: "destructive" }); return;
     }
-    if (trip.serviceType === "airport_transfer" && trip.airportDirection === "to_airport" && !passenger.flightNumber.trim()) {
-      toast({ title: "Flight number required", description: "Please enter your flight number for airport transfers.", variant: "destructive" }); return;
+    if (trip.serviceType === "airport_transfer" && trip.airportDirection === "from_airport" && !passenger.flightNumber.trim()) {
+      toast({ title: "Flight number required", description: "Please enter your flight number when travelling from the airport.", variant: "destructive" }); return;
     }
 
     if (!passenger.acceptTerms) {
@@ -1029,7 +1088,7 @@ const BookingWizard = () => {
             transition={{ duration: 0.25 }}>
             {step === 1 && <TripDetailsStep trip={trip} setTrip={setTrip} onNext={goToVehicles} computing={computing} />}
             {step === 2 && (
-              <VehicleSelectStep trip={trip} vehicles={vehicles} selected={selectedVehicleId}
+              <VehicleSelectStep trip={trip} vehicles={vehicles} selectedPoi={selectedPoi} selected={selectedVehicleId}
                 onSelect={setSelectedVehicleId} onBack={() => setStep(1)}
                 onNext={() => setStep(3)} loading={loadingVehicles} isGuest={!user} />
             )}
