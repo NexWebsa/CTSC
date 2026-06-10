@@ -17,74 +17,75 @@ interface Vehicle {
 }
 
 /* ═══════════════════════════════════════════
-   VEHICLE SILHOUETTE ICONS
+   VEHICLE ICONS — clean flat vector
    ═══════════════════════════════════════════ */
 
 const SedanIcon = ({ className = "" }: { className?: string }) => (
-  <svg viewBox="0 0 120 52" fill="none" className={className} xmlns="http://www.w3.org/2000/svg">
-    <path d="M8 38h104a4 4 0 004-4v-4c0-2-1.5-3.5-3.5-3.5h-12L88 14c-1.5-1.5-3.5-2.5-5.8-2.5H52.5c-2.5 0-4.8 1-6.5 2.7L30.5 26.5H12c-3.3 0-6 2.7-6 6v2.5c0 1.7 1.3 3 3 3z" fill="currentColor" opacity="0.15"/>
-    <path d="M8 38h104a4 4 0 004-4v-4c0-2-1.5-3.5-3.5-3.5h-12L88 14c-1.5-1.5-3.5-2.5-5.8-2.5H52.5c-2.5 0-4.8 1-6.5 2.7L30.5 26.5H12c-3.3 0-6 2.7-6 6v2.5c0 1.7 1.3 3 3 3z" stroke="currentColor" strokeWidth="1.8" strokeLinejoin="round"/>
-    <path d="M33 26.5L47.5 14.8c1-1 2.5-1.6 4-1.6h26.5c1.4 0 2.7.5 3.6 1.4L92 26.5" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round" opacity="0.6"/>
-    <line x1="56" y1="13.2" x2="56" y2="26.5" stroke="currentColor" strokeWidth="1.2" opacity="0.4"/>
-    <circle cx="28" cy="38" r="7.5" fill="none" stroke="currentColor" strokeWidth="2"/>
-    <circle cx="28" cy="38" r="3" fill="currentColor" opacity="0.3"/>
-    <circle cx="92" cy="38" r="7.5" fill="none" stroke="currentColor" strokeWidth="2"/>
-    <circle cx="92" cy="38" r="3" fill="currentColor" opacity="0.3"/>
-    <ellipse cx="114" cy="32" rx="2.5" ry="1.8" fill="currentColor" opacity="0.5"/>
-    <path d="M62 26.5V38" stroke="currentColor" strokeWidth="1.2" opacity="0.3" strokeLinecap="round"/>
+  <svg viewBox="0 0 160 72" fill="none" className={className} xmlns="http://www.w3.org/2000/svg">
+    <path d="M14 50 L14 43 Q14 40 17 40 L27 40 L38 26 Q42 22 48 22 L108 22 Q114 22 118 26 L129 40 L143 40 Q146 40 146 43 L146 50 Q146 52 143 52 L17 52 Q14 52 14 50Z" fill="currentColor" fillOpacity="0.08" stroke="currentColor" strokeWidth="2" strokeLinejoin="round"/>
+    <path d="M40 40 L50 27 Q53 24 57 24 L100 24 Q105 24 108 27 L118 40Z" fill="currentColor" fillOpacity="0.12" stroke="currentColor" strokeWidth="1.5" strokeLinejoin="round"/>
+    <line x1="78" y1="24" x2="78" y2="40" stroke="currentColor" strokeWidth="1.5" strokeOpacity="0.4"/>
+    <circle cx="40" cy="52" r="10" fill="none" stroke="currentColor" strokeWidth="2"/>
+    <circle cx="40" cy="52" r="4.5" fill="currentColor"/>
+    <circle cx="120" cy="52" r="10" fill="none" stroke="currentColor" strokeWidth="2"/>
+    <circle cx="120" cy="52" r="4.5" fill="currentColor"/>
+    <path d="M143 44 L148 44 Q151 44 151 47 L151 49 Q151 51 148 51 L146 51" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
+    <path d="M14 47 L10 47 Q8 47 8 45 L8 43 Q8 41 10 41 L14 41" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
   </svg>
 );
 
 const SuvIcon = ({ className = "" }: { className?: string }) => (
-  <svg viewBox="0 0 120 56" fill="none" className={className} xmlns="http://www.w3.org/2000/svg">
-    <path d="M6 42h108a4 4 0 004-4v-5c0-2-1.5-3.5-3.5-3.5h-10L94 14c-1.2-1.8-3.3-3-5.6-3H48c-2.8 0-5.3 1.3-7 3.3L26.5 29.5H10c-3.3 0-6 2.7-6 6v2.5c0 1.7 1.3 3 3 3z" fill="currentColor" opacity="0.15"/>
-    <path d="M6 42h108a4 4 0 004-4v-5c0-2-1.5-3.5-3.5-3.5h-10L94 14c-1.2-1.8-3.3-3-5.6-3H48c-2.8 0-5.3 1.3-7 3.3L26.5 29.5H10c-3.3 0-6 2.7-6 6v2.5c0 1.7 1.3 3 3 3z" stroke="currentColor" strokeWidth="1.8" strokeLinejoin="round"/>
-    <path d="M29.5 29.5L43 15.5c1-1.2 2.5-1.9 4.2-1.9h24c1.5 0 3 .6 4 1.6L89 29.5" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round" opacity="0.6"/>
-    <line x1="56" y1="13.6" x2="56" y2="29.5" stroke="currentColor" strokeWidth="1.2" opacity="0.4"/>
-    <line x1="72" y1="13.6" x2="72" y2="29.5" stroke="currentColor" strokeWidth="1.2" opacity="0.4"/>
-    <circle cx="28" cy="42" r="8.5" fill="none" stroke="currentColor" strokeWidth="2"/>
-    <circle cx="28" cy="42" r="3.5" fill="currentColor" opacity="0.3"/>
-    <circle cx="92" cy="42" r="8.5" fill="none" stroke="currentColor" strokeWidth="2"/>
-    <circle cx="92" cy="42" r="3.5" fill="currentColor" opacity="0.3"/>
-    <path d="M38 11h44" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" opacity="0.5"/>
-    <ellipse cx="114" cy="34" rx="2.5" ry="2" fill="currentColor" opacity="0.5"/>
+  <svg viewBox="0 0 160 76" fill="none" className={className} xmlns="http://www.w3.org/2000/svg">
+    <path d="M12 54 L12 44 Q12 40 16 40 L28 40 L40 24 Q44 18 52 18 L106 18 Q114 18 118 24 L130 40 L144 40 Q148 40 148 44 L148 54 Q148 57 144 57 L16 57 Q12 57 12 54Z" fill="currentColor" fillOpacity="0.08" stroke="currentColor" strokeWidth="2" strokeLinejoin="round"/>
+    <path d="M42 40 L53 26 Q56 22 61 22 L96 22 Q101 22 105 26 L116 40Z" fill="currentColor" fillOpacity="0.12" stroke="currentColor" strokeWidth="1.5" strokeLinejoin="round"/>
+    <line x1="79" y1="22" x2="79" y2="40" stroke="currentColor" strokeWidth="1.5" strokeOpacity="0.4"/>
+    <line x1="61" y1="22" x2="42" y2="40" stroke="currentColor" strokeWidth="1" strokeOpacity="0.25"/>
+    <line x1="60" y1="15" x2="100" y2="15" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
+    <line x1="60" y1="18" x2="60" y2="15" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
+    <line x1="100" y1="18" x2="100" y2="15" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
+    <circle cx="38" cy="57" r="11" fill="none" stroke="currentColor" strokeWidth="2"/>
+    <circle cx="38" cy="57" r="5" fill="currentColor"/>
+    <circle cx="122" cy="57" r="11" fill="none" stroke="currentColor" strokeWidth="2"/>
+    <circle cx="122" cy="57" r="5" fill="currentColor"/>
+    <path d="M145 46 L151 46 Q154 46 154 49 L154 52 Q154 55 151 55 L148 55" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
   </svg>
 );
 
 const VanIcon = ({ className = "" }: { className?: string }) => (
-  <svg viewBox="0 0 130 58" fill="none" className={className} xmlns="http://www.w3.org/2000/svg">
-    <path d="M4 44h122a3 3 0 003-3v-6c0-2-1.5-3.5-3.5-3.5h-8L108 10c-1-2-3-3.5-5.5-3.5H18c-3.3 0-6 2.7-6 6v28.5c0 1.7 1.3 3 3 3z" fill="currentColor" opacity="0.15"/>
-    <path d="M4 44h122a3 3 0 003-3v-6c0-2-1.5-3.5-3.5-3.5h-8L108 10c-1-2-3-3.5-5.5-3.5H18c-3.3 0-6 2.7-6 6v28.5c0 1.7 1.3 3 3 3z" stroke="currentColor" strokeWidth="1.8" strokeLinejoin="round"/>
-    <rect x="12" y="12" width="16" height="14" rx="1.5" stroke="currentColor" strokeWidth="1.3" opacity="0.5"/>
-    <rect x="32" y="12" width="16" height="14" rx="1.5" stroke="currentColor" strokeWidth="1.3" opacity="0.5"/>
-    <rect x="52" y="12" width="16" height="14" rx="1.5" stroke="currentColor" strokeWidth="1.3" opacity="0.5"/>
-    <rect x="72" y="12" width="16" height="14" rx="1.5" stroke="currentColor" strokeWidth="1.3" opacity="0.5"/>
-    <path d="M94 12l10 14h12.5" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round" opacity="0.5"/>
-    <circle cx="30" cy="44" r="8.5" fill="none" stroke="currentColor" strokeWidth="2"/>
-    <circle cx="30" cy="44" r="3.5" fill="currentColor" opacity="0.3"/>
-    <circle cx="100" cy="44" r="8.5" fill="none" stroke="currentColor" strokeWidth="2"/>
-    <circle cx="100" cy="44" r="3.5" fill="currentColor" opacity="0.3"/>
-    <ellipse cx="124" cy="34" rx="2.5" ry="2" fill="currentColor" opacity="0.5"/>
+  <svg viewBox="0 0 160 72" fill="none" className={className} xmlns="http://www.w3.org/2000/svg">
+    <path d="M10 50 L10 20 Q10 16 14 16 L110 16 Q116 16 120 20 L148 40 Q150 42 150 45 L150 50 Q150 53 146 53 L14 53 Q10 53 10 50Z" fill="currentColor" fillOpacity="0.08" stroke="currentColor" strokeWidth="2" strokeLinejoin="round"/>
+    <rect x="16" y="20" width="20" height="17" rx="2" fill="currentColor" fillOpacity="0.12" stroke="currentColor" strokeWidth="1.5"/>
+    <rect x="42" y="20" width="20" height="17" rx="2" fill="currentColor" fillOpacity="0.12" stroke="currentColor" strokeWidth="1.5"/>
+    <rect x="68" y="20" width="20" height="17" rx="2" fill="currentColor" fillOpacity="0.12" stroke="currentColor" strokeWidth="1.5"/>
+    <rect x="94" y="20" width="16" height="17" rx="2" fill="currentColor" fillOpacity="0.12" stroke="currentColor" strokeWidth="1.5"/>
+    <path d="M112 20 L138 40 L150 40" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
+    <line x1="10" y1="37" x2="112" y2="37" stroke="currentColor" strokeWidth="1" strokeOpacity="0.3" strokeDasharray="3 3"/>
+    <circle cx="36" cy="53" r="10" fill="none" stroke="currentColor" strokeWidth="2"/>
+    <circle cx="36" cy="53" r="4.5" fill="currentColor"/>
+    <circle cx="122" cy="53" r="10" fill="none" stroke="currentColor" strokeWidth="2"/>
+    <circle cx="122" cy="53" r="4.5" fill="currentColor"/>
+    <path d="M148 43 L154 43 Q156 43 156 46 L156 49 Q156 52 154 52 L150 52" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
   </svg>
 );
 
 const MinibusIcon = ({ className = "" }: { className?: string }) => (
-  <svg viewBox="0 0 150 60" fill="none" className={className} xmlns="http://www.w3.org/2000/svg">
-    <path d="M4 46h142a3 3 0 003-3v-6c0-2-1.5-3.5-3.5-3.5h-7L128 10c-1-2-3-3.5-5.5-3.5H18c-3.3 0-6 2.7-6 6v30.5c0 1.7 1.3 3 3 3z" fill="currentColor" opacity="0.15"/>
-    <path d="M4 46h142a3 3 0 003-3v-6c0-2-1.5-3.5-3.5-3.5h-7L128 10c-1-2-3-3.5-5.5-3.5H18c-3.3 0-6 2.7-6 6v30.5c0 1.7 1.3 3 3 3z" stroke="currentColor" strokeWidth="1.8" strokeLinejoin="round"/>
-    <rect x="10" y="12" width="14" height="15" rx="1.5" stroke="currentColor" strokeWidth="1.3" opacity="0.5"/>
-    <rect x="28" y="12" width="14" height="15" rx="1.5" stroke="currentColor" strokeWidth="1.3" opacity="0.5"/>
-    <rect x="46" y="12" width="14" height="15" rx="1.5" stroke="currentColor" strokeWidth="1.3" opacity="0.5"/>
-    <rect x="64" y="12" width="14" height="15" rx="1.5" stroke="currentColor" strokeWidth="1.3" opacity="0.5"/>
-    <rect x="82" y="12" width="14" height="15" rx="1.5" stroke="currentColor" strokeWidth="1.3" opacity="0.5"/>
-    <rect x="100" y="12" width="14" height="15" rx="1.5" stroke="currentColor" strokeWidth="1.3" opacity="0.5"/>
-    <path d="M120 12l10 15h12" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round" opacity="0.5"/>
-    <circle cx="34" cy="46" r="9" fill="none" stroke="currentColor" strokeWidth="2"/>
-    <circle cx="34" cy="46" r="4" fill="currentColor" opacity="0.3"/>
-    <circle cx="116" cy="46" r="9" fill="none" stroke="currentColor" strokeWidth="2"/>
-    <circle cx="116" cy="46" r="4" fill="currentColor" opacity="0.3"/>
-    <rect x="127" y="18" width="3" height="5" rx="1" fill="currentColor" opacity="0.4"/>
-    <ellipse cx="144" cy="35" rx="2.5" ry="2" fill="currentColor" opacity="0.5"/>
+  <svg viewBox="0 0 180 72" fill="none" className={className} xmlns="http://www.w3.org/2000/svg">
+    <path d="M10 50 L10 18 Q10 14 14 14 L140 14 Q146 14 150 18 L168 40 Q170 43 170 46 L170 50 Q170 53 166 53 L14 53 Q10 53 10 50Z" fill="currentColor" fillOpacity="0.08" stroke="currentColor" strokeWidth="2" strokeLinejoin="round"/>
+    <rect x="16" y="18" width="16" height="16" rx="2" fill="currentColor" fillOpacity="0.12" stroke="currentColor" strokeWidth="1.5"/>
+    <rect x="37" y="18" width="16" height="16" rx="2" fill="currentColor" fillOpacity="0.12" stroke="currentColor" strokeWidth="1.5"/>
+    <rect x="58" y="18" width="16" height="16" rx="2" fill="currentColor" fillOpacity="0.12" stroke="currentColor" strokeWidth="1.5"/>
+    <rect x="79" y="18" width="16" height="16" rx="2" fill="currentColor" fillOpacity="0.12" stroke="currentColor" strokeWidth="1.5"/>
+    <rect x="100" y="18" width="16" height="16" rx="2" fill="currentColor" fillOpacity="0.12" stroke="currentColor" strokeWidth="1.5"/>
+    <rect x="121" y="18" width="16" height="16" rx="2" fill="currentColor" fillOpacity="0.12" stroke="currentColor" strokeWidth="1.5"/>
+    <path d="M139 18 L162 40 L170 40" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
+    <line x1="10" y1="34" x2="139" y2="34" stroke="currentColor" strokeWidth="1" strokeOpacity="0.3" strokeDasharray="3 3"/>
+    <circle cx="38" cy="53" r="10" fill="none" stroke="currentColor" strokeWidth="2"/>
+    <circle cx="38" cy="53" r="4.5" fill="currentColor"/>
+    <circle cx="80" cy="53" r="10" fill="none" stroke="currentColor" strokeWidth="2"/>
+    <circle cx="80" cy="53" r="4.5" fill="currentColor"/>
+    <circle cx="144" cy="53" r="10" fill="none" stroke="currentColor" strokeWidth="2"/>
+    <circle cx="144" cy="53" r="4.5" fill="currentColor"/>
+    <path d="M168 44 L174 44 Q176 44 176 47 L176 49 Q176 52 174 52 L170 52" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
   </svg>
 );
 
@@ -174,7 +175,7 @@ const FleetPreview = () => {
           </h2>
           <p className="text-muted-foreground max-w-xl mx-auto mt-5 text-base leading-relaxed">
             Every vehicle is fully licensed, insured, and meticulously
-            maintained from sleek sedans to spacious minibuses.
+            maintained — from sleek sedans to spacious minibuses.
           </p>
         </motion.div>
 
@@ -459,7 +460,7 @@ const FleetPreview = () => {
                 <Button
                   variant="outline"
                   size="lg"
-                  className="gap-2 font-semibold rounded-xl hover:border-accent/50 hover:text-white transition-all hover:-translate-y-0.5"
+                  className="gap-2 font-semibold rounded-xl hover:border-accent/50 hover:text-accent transition-all hover:-translate-y-0.5"
                 >
                   View Full Fleet
                   <ArrowRight className="w-4 h-4" />
