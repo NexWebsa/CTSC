@@ -44,29 +44,24 @@ const Terms = () => {
   ];
 
   return (
-    <div className="min-h-screen flex flex-col bg-gradient-to-b from-background to-background/95">
+    <div className="min-h-screen flex flex-col bg-gradient-to-b from-background to-background/95 overflow-x-hidden">
       <Seo
         title="Terms & Conditions | CTSC Travel"
         description="CTSC Travel terms and conditions — bookings, cancellations, refunds, luggage, safety and privacy policies for our Cape Town shuttle services."
         path="/terms"
       />
       <Navbar />
-      <div className="flex-grow pt-20 section-padding">
+      <div className="flex-grow pt-20 px-4 sm:px-6 lg:px-8">
         {/* Hero Section */}
         <motion.div
-          initial={{ opacity: 0, y: -20 }}
-          animate={{ opacity: 1, y: 0 }}
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
           className="text-center mb-16"
         >
-          <div className="inline-flex items-center justify-center mb-4">
-            <div className="w-12 h-12 bg-accent/10 rounded-full flex items-center justify-center">
-              <span className="text-2xl">📋</span>
-            </div>
-          </div>
           <span className="text-sm font-semibold tracking-widest uppercase text-accent/70">
             Our Policies
           </span>
-          <h1 className="text-5xl sm:text-6xl font-bold text-foreground mt-4 bg-clip-text bg-gradient-to-r from-foreground to-foreground/80">
+          <h1 className="text-4xl sm:text-6xl font-bold text-foreground mt-4">
             Terms &amp; Conditions
           </h1>
           <p className="text-lg text-muted-foreground mt-6 max-w-2xl mx-auto leading-relaxed">
@@ -74,14 +69,14 @@ const Terms = () => {
           </p>
         </motion.div>
 
-        <div className="container mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+        <div className="container mx-auto max-w-7xl px-0 sm:px-4 lg:px-8">
           <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
             {/* Sidebar Navigation */}
             <motion.div
-              initial={{ opacity: 0, x: -20 }}
-              animate={{ opacity: 1, x: 0 }}
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
               transition={{ delay: 0.1 }}
-              className="lg:col-span-1"
+              className="hidden lg:block lg:col-span-1"
             >
               <div className="sticky top-24 bg-card border border-border rounded-xl p-6 space-y-2">
                 <h3 className="font-semibold text-foreground mb-4 text-sm uppercase tracking-wide">Sections</h3>
@@ -93,11 +88,10 @@ const Terms = () => {
                       const element = document.getElementById(`section-${idx}`);
                       element?.scrollIntoView({ behavior: "smooth" });
                     }}
-                    className={`w-full text-left px-3 py-2 rounded-lg text-sm font-medium transition-all duration-200 ${
-                      activeSection === idx
-                        ? "bg-accent text-white shadow-lg"
-                        : "text-muted-foreground hover:bg-accent/10 hover:text-foreground"
-                    }`}
+                    className={`w-full text-left px-3 py-2 rounded-lg text-sm font-medium transition-all duration-200 ${activeSection === idx
+                      ? "bg-accent text-white shadow-lg"
+                      : "text-muted-foreground hover:bg-accent/10 hover:text-foreground"
+                      }`}
                   >
                     {section}
                   </button>
@@ -110,7 +104,7 @@ const Terms = () => {
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.15 }}
-              className="lg:col-span-3"
+              className="col-span-1 lg:col-span-3"
             >
               <TermsContent activeSection={activeSection} onSectionChange={setActiveSection} />
             </motion.div>

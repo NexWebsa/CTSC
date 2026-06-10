@@ -2,10 +2,6 @@
 import { MapPin } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 
-/**
- * Loads the Google Maps JS SDK exactly once using the async pattern.
- * Returns true once `google.maps` is ready.
- */
 let mapsPromise: Promise<void> | null = null;
 
 function loadMaps(): Promise<void> {
@@ -51,7 +47,6 @@ interface AddressAutocompleteProps {
   onChange: (value: string) => void;
   placeholder?: string;
   className?: string;
-  /** Bias to South Africa */
   region?: string;
 }
 
@@ -66,8 +61,10 @@ export const AddressAutocomplete = ({
   const [suggestions, setSuggestions] = useState<Suggestion[]>([]);
   const [open, setOpen] = useState(false);
   const [highlight, setHighlight] = useState(0);
+  const [dropdownStyle, setDropdownStyle] = useState<React.CSSProperties>({});
   const tokenRef = useRef<any>(null);
   const wrapRef = useRef<HTMLDivElement>(null);
+  const inputRef = useRef<HTMLInputElement>(null);
   const debounceRef = useRef<number | null>(null);
 
   useEffect(() => {
@@ -77,6 +74,40 @@ export const AddressAutocomplete = ({
     document.addEventListener("mousedown", onDoc);
     return () => document.removeEventListener("mousedown", onDoc);
   }, []);
+
+  // Recalculate dropdown position on scroll or resize so it stays anchored
+  useEffect(() => {
+    if (!open) return;
+    const update = () => {
+      if (!inputRef.current) return;
+      const r = inputRef.current.getBoundingClientRect();
+      setDropdownStyle({
+        position: "fixed",
+        top: r.bottom + 4,
+        left: r.left,
+        width: r.width,
+        zIndex: 9999,
+      });
+    };
+    window.addEventListener("scroll", update, true);
+    window.addEventListener("resize", update);
+    return () => {
+      window.removeEventListener("scroll", update, true);
+      window.removeEventListener("resize", update);
+    };
+  }, [open]);
+
+  const updateDropdownPos = () => {
+    if (!inputRef.current) return;
+    const r = inputRef.current.getBoundingClientRect();
+    setDropdownStyle({
+      position: "fixed",
+      top: r.bottom + 4,
+      left: r.left,
+      width: r.width,
+      zIndex: 9999,
+    });
+  };
 
   const fetchSuggestions = async (input: string) => {
     if (!ready || input.trim().length < 3) {
@@ -112,6 +143,7 @@ export const AddressAutocomplete = ({
 
   const handleChange = (v: string) => {
     onChange(v);
+    updateDropdownPos();
     if (debounceRef.current) window.clearTimeout(debounceRef.current);
     debounceRef.current = window.setTimeout(() => fetchSuggestions(v), 220);
   };
@@ -121,17 +153,21 @@ export const AddressAutocomplete = ({
     onChange(full);
     setOpen(false);
     setSuggestions([]);
-    tokenRef.current = null; // end session
+    tokenRef.current = null;
   };
 
   return (
     <div ref={wrapRef} className="relative">
       <input
+        ref={inputRef}
         type="text"
         value={value}
         placeholder={placeholder}
         onChange={(e) => handleChange(e.target.value)}
-        onFocus={() => suggestions.length > 0 && setOpen(true)}
+        onFocus={() => {
+          updateDropdownPos();
+          suggestions.length > 0 && setOpen(true);
+        }}
         onKeyDown={(e) => {
           if (!open) return;
           if (e.key === "ArrowDown") { e.preventDefault(); setHighlight(h => Math.min(h + 1, suggestions.length - 1)); }
@@ -142,12 +178,12 @@ export const AddressAutocomplete = ({
         className={`flex h-11 w-full rounded-lg border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/30 focus-visible:border-accent transition-all ${className}`}
       />
       {open && suggestions.length > 0 && (
-        <div className="absolute z-50 mt-1 w-full bg-card border border-border rounded-xl shadow-xl shadow-black/10 overflow-hidden">
+        <div style={dropdownStyle} className="bg-card border border-border rounded-xl shadow-xl shadow-black/10 overflow-hidden">
           {suggestions.map((s, i) => (
             <button
               key={s.placeId + i}
               type="button"
-              onClick={() => pick(s)}
+              onMouseDown={(e) => { e.preventDefault(); pick(s); }}
               onMouseEnter={() => setHighlight(i)}
               className={`flex items-start gap-2.5 w-full text-left px-3 py-2.5 text-sm transition-colors ${i === highlight ? "bg-accent/10" : "hover:bg-accent/5"}`}
             >

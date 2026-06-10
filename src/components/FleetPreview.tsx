@@ -22,70 +22,70 @@ interface Vehicle {
 
 const SedanIcon = ({ className = "" }: { className?: string }) => (
   <svg viewBox="0 0 160 72" fill="none" className={className} xmlns="http://www.w3.org/2000/svg">
-    <path d="M14 50 L14 43 Q14 40 17 40 L27 40 L38 26 Q42 22 48 22 L108 22 Q114 22 118 26 L129 40 L143 40 Q146 40 146 43 L146 50 Q146 52 143 52 L17 52 Q14 52 14 50Z" fill="currentColor" fillOpacity="0.08" stroke="currentColor" strokeWidth="2" strokeLinejoin="round"/>
-    <path d="M40 40 L50 27 Q53 24 57 24 L100 24 Q105 24 108 27 L118 40Z" fill="currentColor" fillOpacity="0.12" stroke="currentColor" strokeWidth="1.5" strokeLinejoin="round"/>
-    <line x1="78" y1="24" x2="78" y2="40" stroke="currentColor" strokeWidth="1.5" strokeOpacity="0.4"/>
-    <circle cx="40" cy="52" r="10" fill="none" stroke="currentColor" strokeWidth="2"/>
-    <circle cx="40" cy="52" r="4.5" fill="currentColor"/>
-    <circle cx="120" cy="52" r="10" fill="none" stroke="currentColor" strokeWidth="2"/>
-    <circle cx="120" cy="52" r="4.5" fill="currentColor"/>
-    <path d="M143 44 L148 44 Q151 44 151 47 L151 49 Q151 51 148 51 L146 51" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
-    <path d="M14 47 L10 47 Q8 47 8 45 L8 43 Q8 41 10 41 L14 41" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
+    <path d="M14 50 L14 43 Q14 40 17 40 L27 40 L38 26 Q42 22 48 22 L108 22 Q114 22 118 26 L129 40 L143 40 Q146 40 146 43 L146 50 Q146 52 143 52 L17 52 Q14 52 14 50Z" fill="currentColor" fillOpacity="0.08" stroke="currentColor" strokeWidth="2" strokeLinejoin="round" />
+    <path d="M40 40 L50 27 Q53 24 57 24 L100 24 Q105 24 108 27 L118 40Z" fill="currentColor" fillOpacity="0.12" stroke="currentColor" strokeWidth="1.5" strokeLinejoin="round" />
+    <line x1="78" y1="24" x2="78" y2="40" stroke="currentColor" strokeWidth="1.5" strokeOpacity="0.4" />
+    <circle cx="40" cy="52" r="10" fill="none" stroke="currentColor" strokeWidth="2" />
+    <circle cx="40" cy="52" r="4.5" fill="currentColor" />
+    <circle cx="120" cy="52" r="10" fill="none" stroke="currentColor" strokeWidth="2" />
+    <circle cx="120" cy="52" r="4.5" fill="currentColor" />
+    <path d="M143 44 L148 44 Q151 44 151 47 L151 49 Q151 51 148 51 L146 51" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+    <path d="M14 47 L10 47 Q8 47 8 45 L8 43 Q8 41 10 41 L14 41" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
   </svg>
 );
 
 const SuvIcon = ({ className = "" }: { className?: string }) => (
   <svg viewBox="0 0 160 76" fill="none" className={className} xmlns="http://www.w3.org/2000/svg">
-    <path d="M12 54 L12 44 Q12 40 16 40 L28 40 L40 24 Q44 18 52 18 L106 18 Q114 18 118 24 L130 40 L144 40 Q148 40 148 44 L148 54 Q148 57 144 57 L16 57 Q12 57 12 54Z" fill="currentColor" fillOpacity="0.08" stroke="currentColor" strokeWidth="2" strokeLinejoin="round"/>
-    <path d="M42 40 L53 26 Q56 22 61 22 L96 22 Q101 22 105 26 L116 40Z" fill="currentColor" fillOpacity="0.12" stroke="currentColor" strokeWidth="1.5" strokeLinejoin="round"/>
-    <line x1="79" y1="22" x2="79" y2="40" stroke="currentColor" strokeWidth="1.5" strokeOpacity="0.4"/>
-    <line x1="61" y1="22" x2="42" y2="40" stroke="currentColor" strokeWidth="1" strokeOpacity="0.25"/>
-    <line x1="60" y1="15" x2="100" y2="15" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
-    <line x1="60" y1="18" x2="60" y2="15" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
-    <line x1="100" y1="18" x2="100" y2="15" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
-    <circle cx="38" cy="57" r="11" fill="none" stroke="currentColor" strokeWidth="2"/>
-    <circle cx="38" cy="57" r="5" fill="currentColor"/>
-    <circle cx="122" cy="57" r="11" fill="none" stroke="currentColor" strokeWidth="2"/>
-    <circle cx="122" cy="57" r="5" fill="currentColor"/>
-    <path d="M145 46 L151 46 Q154 46 154 49 L154 52 Q154 55 151 55 L148 55" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
+    <path d="M12 54 L12 44 Q12 40 16 40 L28 40 L40 24 Q44 18 52 18 L106 18 Q114 18 118 24 L130 40 L144 40 Q148 40 148 44 L148 54 Q148 57 144 57 L16 57 Q12 57 12 54Z" fill="currentColor" fillOpacity="0.08" stroke="currentColor" strokeWidth="2" strokeLinejoin="round" />
+    <path d="M42 40 L53 26 Q56 22 61 22 L96 22 Q101 22 105 26 L116 40Z" fill="currentColor" fillOpacity="0.12" stroke="currentColor" strokeWidth="1.5" strokeLinejoin="round" />
+    <line x1="79" y1="22" x2="79" y2="40" stroke="currentColor" strokeWidth="1.5" strokeOpacity="0.4" />
+    <line x1="61" y1="22" x2="42" y2="40" stroke="currentColor" strokeWidth="1" strokeOpacity="0.25" />
+    <line x1="60" y1="15" x2="100" y2="15" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+    <line x1="60" y1="18" x2="60" y2="15" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+    <line x1="100" y1="18" x2="100" y2="15" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+    <circle cx="38" cy="57" r="11" fill="none" stroke="currentColor" strokeWidth="2" />
+    <circle cx="38" cy="57" r="5" fill="currentColor" />
+    <circle cx="122" cy="57" r="11" fill="none" stroke="currentColor" strokeWidth="2" />
+    <circle cx="122" cy="57" r="5" fill="currentColor" />
+    <path d="M145 46 L151 46 Q154 46 154 49 L154 52 Q154 55 151 55 L148 55" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
   </svg>
 );
 
 const VanIcon = ({ className = "" }: { className?: string }) => (
   <svg viewBox="0 0 160 72" fill="none" className={className} xmlns="http://www.w3.org/2000/svg">
-    <path d="M10 50 L10 20 Q10 16 14 16 L110 16 Q116 16 120 20 L148 40 Q150 42 150 45 L150 50 Q150 53 146 53 L14 53 Q10 53 10 50Z" fill="currentColor" fillOpacity="0.08" stroke="currentColor" strokeWidth="2" strokeLinejoin="round"/>
-    <rect x="16" y="20" width="20" height="17" rx="2" fill="currentColor" fillOpacity="0.12" stroke="currentColor" strokeWidth="1.5"/>
-    <rect x="42" y="20" width="20" height="17" rx="2" fill="currentColor" fillOpacity="0.12" stroke="currentColor" strokeWidth="1.5"/>
-    <rect x="68" y="20" width="20" height="17" rx="2" fill="currentColor" fillOpacity="0.12" stroke="currentColor" strokeWidth="1.5"/>
-    <rect x="94" y="20" width="16" height="17" rx="2" fill="currentColor" fillOpacity="0.12" stroke="currentColor" strokeWidth="1.5"/>
-    <path d="M112 20 L138 40 L150 40" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
-    <line x1="10" y1="37" x2="112" y2="37" stroke="currentColor" strokeWidth="1" strokeOpacity="0.3" strokeDasharray="3 3"/>
-    <circle cx="36" cy="53" r="10" fill="none" stroke="currentColor" strokeWidth="2"/>
-    <circle cx="36" cy="53" r="4.5" fill="currentColor"/>
-    <circle cx="122" cy="53" r="10" fill="none" stroke="currentColor" strokeWidth="2"/>
-    <circle cx="122" cy="53" r="4.5" fill="currentColor"/>
-    <path d="M148 43 L154 43 Q156 43 156 46 L156 49 Q156 52 154 52 L150 52" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
+    <path d="M10 50 L10 20 Q10 16 14 16 L110 16 Q116 16 120 20 L148 40 Q150 42 150 45 L150 50 Q150 53 146 53 L14 53 Q10 53 10 50Z" fill="currentColor" fillOpacity="0.08" stroke="currentColor" strokeWidth="2" strokeLinejoin="round" />
+    <rect x="16" y="20" width="20" height="17" rx="2" fill="currentColor" fillOpacity="0.12" stroke="currentColor" strokeWidth="1.5" />
+    <rect x="42" y="20" width="20" height="17" rx="2" fill="currentColor" fillOpacity="0.12" stroke="currentColor" strokeWidth="1.5" />
+    <rect x="68" y="20" width="20" height="17" rx="2" fill="currentColor" fillOpacity="0.12" stroke="currentColor" strokeWidth="1.5" />
+    <rect x="94" y="20" width="16" height="17" rx="2" fill="currentColor" fillOpacity="0.12" stroke="currentColor" strokeWidth="1.5" />
+    <path d="M112 20 L138 40 L150 40" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+    <line x1="10" y1="37" x2="112" y2="37" stroke="currentColor" strokeWidth="1" strokeOpacity="0.3" strokeDasharray="3 3" />
+    <circle cx="36" cy="53" r="10" fill="none" stroke="currentColor" strokeWidth="2" />
+    <circle cx="36" cy="53" r="4.5" fill="currentColor" />
+    <circle cx="122" cy="53" r="10" fill="none" stroke="currentColor" strokeWidth="2" />
+    <circle cx="122" cy="53" r="4.5" fill="currentColor" />
+    <path d="M148 43 L154 43 Q156 43 156 46 L156 49 Q156 52 154 52 L150 52" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
   </svg>
 );
 
 const MinibusIcon = ({ className = "" }: { className?: string }) => (
   <svg viewBox="0 0 180 72" fill="none" className={className} xmlns="http://www.w3.org/2000/svg">
-    <path d="M10 50 L10 18 Q10 14 14 14 L140 14 Q146 14 150 18 L168 40 Q170 43 170 46 L170 50 Q170 53 166 53 L14 53 Q10 53 10 50Z" fill="currentColor" fillOpacity="0.08" stroke="currentColor" strokeWidth="2" strokeLinejoin="round"/>
-    <rect x="16" y="18" width="16" height="16" rx="2" fill="currentColor" fillOpacity="0.12" stroke="currentColor" strokeWidth="1.5"/>
-    <rect x="37" y="18" width="16" height="16" rx="2" fill="currentColor" fillOpacity="0.12" stroke="currentColor" strokeWidth="1.5"/>
-    <rect x="58" y="18" width="16" height="16" rx="2" fill="currentColor" fillOpacity="0.12" stroke="currentColor" strokeWidth="1.5"/>
-    <rect x="79" y="18" width="16" height="16" rx="2" fill="currentColor" fillOpacity="0.12" stroke="currentColor" strokeWidth="1.5"/>
-    <rect x="100" y="18" width="16" height="16" rx="2" fill="currentColor" fillOpacity="0.12" stroke="currentColor" strokeWidth="1.5"/>
-    <rect x="121" y="18" width="16" height="16" rx="2" fill="currentColor" fillOpacity="0.12" stroke="currentColor" strokeWidth="1.5"/>
-    <path d="M139 18 L162 40 L170 40" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
-    <line x1="10" y1="34" x2="139" y2="34" stroke="currentColor" strokeWidth="1" strokeOpacity="0.3" strokeDasharray="3 3"/>
-    <circle cx="38" cy="53" r="10" fill="none" stroke="currentColor" strokeWidth="2"/>
-    <circle cx="38" cy="53" r="4.5" fill="currentColor"/>
-    <circle cx="80" cy="53" r="10" fill="none" stroke="currentColor" strokeWidth="2"/>
-    <circle cx="80" cy="53" r="4.5" fill="currentColor"/>
-    <circle cx="144" cy="53" r="10" fill="none" stroke="currentColor" strokeWidth="2"/>
-    <circle cx="144" cy="53" r="4.5" fill="currentColor"/>
-    <path d="M168 44 L174 44 Q176 44 176 47 L176 49 Q176 52 174 52 L170 52" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
+    <path d="M10 50 L10 18 Q10 14 14 14 L140 14 Q146 14 150 18 L168 40 Q170 43 170 46 L170 50 Q170 53 166 53 L14 53 Q10 53 10 50Z" fill="currentColor" fillOpacity="0.08" stroke="currentColor" strokeWidth="2" strokeLinejoin="round" />
+    <rect x="16" y="18" width="16" height="16" rx="2" fill="currentColor" fillOpacity="0.12" stroke="currentColor" strokeWidth="1.5" />
+    <rect x="37" y="18" width="16" height="16" rx="2" fill="currentColor" fillOpacity="0.12" stroke="currentColor" strokeWidth="1.5" />
+    <rect x="58" y="18" width="16" height="16" rx="2" fill="currentColor" fillOpacity="0.12" stroke="currentColor" strokeWidth="1.5" />
+    <rect x="79" y="18" width="16" height="16" rx="2" fill="currentColor" fillOpacity="0.12" stroke="currentColor" strokeWidth="1.5" />
+    <rect x="100" y="18" width="16" height="16" rx="2" fill="currentColor" fillOpacity="0.12" stroke="currentColor" strokeWidth="1.5" />
+    <rect x="121" y="18" width="16" height="16" rx="2" fill="currentColor" fillOpacity="0.12" stroke="currentColor" strokeWidth="1.5" />
+    <path d="M139 18 L162 40 L170 40" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+    <line x1="10" y1="34" x2="139" y2="34" stroke="currentColor" strokeWidth="1" strokeOpacity="0.3" strokeDasharray="3 3" />
+    <circle cx="38" cy="53" r="10" fill="none" stroke="currentColor" strokeWidth="2" />
+    <circle cx="38" cy="53" r="4.5" fill="currentColor" />
+    <circle cx="80" cy="53" r="10" fill="none" stroke="currentColor" strokeWidth="2" />
+    <circle cx="80" cy="53" r="4.5" fill="currentColor" />
+    <circle cx="144" cy="53" r="10" fill="none" stroke="currentColor" strokeWidth="2" />
+    <circle cx="144" cy="53" r="4.5" fill="currentColor" />
+    <path d="M168 44 L174 44 Q176 44 176 47 L176 49 Q176 52 174 52 L170 52" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
   </svg>
 );
 
@@ -193,7 +193,7 @@ const FleetPreview = () => {
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
             transition={{ duration: 0.6, delay: 0.1 }}
-            className="max-w-6xl mx-auto"
+            className="w-full max-w-6xl mx-auto"
           >
 
             {/* ═══════ ICON SELECTOR ═══════ */}
@@ -218,7 +218,7 @@ const FleetPreview = () => {
                 - grid-cols-11 on lg (or auto-fit) → single row when there's room
                 This means nothing is ever clipped regardless of count.
               */}
-              <div className="grid grid-cols-4 sm:grid-cols-6 lg:grid-cols-11 gap-2 sm:gap-3">
+              <div className="flex sm:grid sm:grid-cols-6 lg:grid-cols-11 gap-2 sm:gap-3 overflow-x-auto sm:overflow-x-visible pb-2.5 sm:pb-0 snap-x snap-mandatory [scrollbar-width:thin] [scrollbar-color:hsl(var(--accent)/0.35)_transparent]">
                 {vehicles.map((v, idx) => {
                   const Icon = pickIcon(v.capacity);
                   const isActive = selected?.id === v.id;
@@ -230,15 +230,14 @@ const FleetPreview = () => {
                       viewport={{ once: true }}
                       transition={{ delay: idx * 0.04, duration: 0.35 }}
                       onClick={() => setSelectedId(v.id)}
-                      className="group flex flex-col items-center gap-2 relative focus:outline-none focus-visible:ring-2 focus-visible:ring-accent rounded-xl"
+                      className="group flex flex-col items-center gap-2 relative focus:outline-none focus-visible:ring-2 focus-visible:ring-accent rounded-xl flex-shrink-0 w-16 sm:w-auto snap-start"
                     >
                       {/* Icon container */}
                       <div
-                        className={`relative w-full rounded-xl transition-all duration-300 flex items-center justify-center px-2 py-2.5 ${
-                          isActive
+                        className={`relative w-full rounded-xl transition-all duration-300 flex items-center justify-center px-2 py-2.5 ${isActive
                             ? "text-accent border-2 border-accent shadow-[0_0_20px_-6px_hsl(var(--accent)/0.6)]"
                             : "border border-border/50 text-muted-foreground/50 group-hover:text-foreground/70 group-hover:border-border"
-                        }`}
+                          }`}
                         style={{
                           background: isActive
                             ? "hsl(var(--accent)/0.08)"
@@ -257,11 +256,10 @@ const FleetPreview = () => {
                       </div>
                       {/* Name label */}
                       <span
-                        className={`text-[10px] leading-tight text-center font-medium transition-colors px-0.5 line-clamp-2 ${
-                          isActive
+                        className={`text-[10px] leading-tight text-center font-medium transition-colors px-0.5 line-clamp-2 ${isActive
                             ? "text-accent"
                             : "text-muted-foreground/60 group-hover:text-foreground/70"
-                        }`}
+                          }`}
                       >
                         {v.name}
                       </span>
@@ -295,11 +293,11 @@ const FleetPreview = () => {
                     }}
                   />
 
-                  <div className="grid grid-cols-1 lg:grid-cols-5 gap-0">
+                  <div className="grid grid-cols-1 lg:grid-cols-5 gap-0 w-full">
 
                     {/* ── Image panel ── */}
                     <div className="lg:col-span-3 relative">
-                      <div className="aspect-[16/10] lg:aspect-auto lg:h-full min-h-[240px] relative overflow-hidden">
+                      <div className="aspect-[4/3] sm:aspect-[16/10] lg:aspect-auto lg:h-full min-h-[240px] relative overflow-hidden">
                         {selected.image_url ? (
                           <motion.img
                             key={selected.image_url}
@@ -322,27 +320,23 @@ const FleetPreview = () => {
                         <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/10 to-transparent pointer-events-none" />
 
                         {/* Capacity badge */}
-                        <div className="absolute bottom-4 left-4">
-                          <motion.span
-                            initial={{ opacity: 0, x: -8 }}
-                            animate={{ opacity: 1, x: 0 }}
-                            transition={{ delay: 0.2 }}
-                            className="inline-flex items-center gap-1.5 bg-black/55 backdrop-blur-md text-white px-3 py-1.5 rounded-lg text-xs font-medium border border-white/10"
-                          >
-                            <Users className="w-3.5 h-3.5 text-accent" />
-                            Up to {selected.capacity} passengers
-                          </motion.span>
-                        </div>
-
-                        {/* Vehicle name overlay on image (mobile) */}
-                        <div className="absolute bottom-4 right-4 lg:hidden">
+                        <div className="absolute bottom-0 left-0 right-0 px-4 py-3 flex items-center justify-between gap-3 bg-gradient-to-t from-black/70 to-transparent">
                           <motion.span
                             initial={{ opacity: 0 }}
                             animate={{ opacity: 1 }}
                             transition={{ delay: 0.15 }}
-                            className="text-white font-bold text-lg drop-shadow-lg"
+                            className="text-white font-bold text-lg drop-shadow-lg leading-tight lg:hidden truncate"
                           >
                             {selected.name}
+                          </motion.span>
+                          <motion.span
+                            initial={{ opacity: 0, x: -8 }}
+                            animate={{ opacity: 1, x: 0 }}
+                            transition={{ delay: 0.2 }}
+                            className="inline-flex items-center gap-1.5 bg-black/55 backdrop-blur-md text-white px-3 py-1.5 rounded-lg text-xs font-medium border border-white/10 flex-shrink-0 ml-auto"
+                          >
+                            <Users className="w-3.5 h-3.5 text-accent" />
+                            Up to {selected.capacity} passengers
                           </motion.span>
                         </div>
                       </div>
@@ -460,7 +454,7 @@ const FleetPreview = () => {
                 <Button
                   variant="outline"
                   size="lg"
-                  className="gap-2 font-semibold rounded-xl hover:border-accent/50 hover:text-accent transition-all hover:-translate-y-0.5"
+                  className="gap-2 font-semibold rounded-xl hover:border-accent/50 hover:text-white transition-all hover:-translate-y-0.5"
                 >
                   View Full Fleet
                   <ArrowRight className="w-4 h-4" />

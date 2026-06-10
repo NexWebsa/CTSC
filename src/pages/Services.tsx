@@ -3,11 +3,11 @@ import { Link } from "react-router-dom";
 import { ArrowRight } from "lucide-react";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
-import airport from "../assets/AIRPORT-TRANSFERS.jpeg";
-import point from "../assets/POINT-TO-POINT.jpg";
-import chauffeur from "../assets/CHAUFFEUR-SERVICES.jpg";
-import charter from "../assets/CHARTER-SERVICES.jpg";
-import dinner from "../assets/DINNER-TRANSFERS.jpg";
+import airport from "../assets/Airport-transfer.png";
+import point from "../assets/Point-to-point.jpg";
+import chauffeur from "../assets/VIP.png";
+import charter from "../assets/charter-bus.png";
+import dinner from "../assets/dinner-transfer.jpg";
 import emptrans from "../assets/emptrans.jpg";
 import stafftrans from "../assets/stafftrans.png";
 

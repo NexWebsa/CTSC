@@ -15,9 +15,9 @@ import {
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import Seo from "@/components/Seo";
-import airportTransfersImage from "@/assets/AIRPORT-TRANSFERS.jpeg";
-import chauffeurServicesImage from "@/assets/CHAUFFEUR-SERVICES.jpg";
-import pointToPointImage from "@/assets/POINT-TO-POINT.jpg";
+import airportTransfersImage from "@/assets/Airport-transfer.png";
+import chauffeurServicesImage from "@/assets/VIP.png";
+import pointToPointImage from "@/assets/Point-to-point.jpg";
 import employeeTransportImage from "@/assets/emptrans.jpg";
 import staffShuttleImage from "@/assets/stafftrans.png";
 

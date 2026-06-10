@@ -9,6 +9,8 @@ import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/lib/supabase";
 import { Mail, Lock, User, ArrowRight, ShieldCheck, Eye, EyeOff } from "lucide-react";
 
+import logo from "@/assets/ctscnav.png";
+
 const Auth = () => {
   const [isLogin, setIsLogin] = useState(true);
   const [email, setEmail] = useState("");
@@ -51,7 +53,7 @@ const Auth = () => {
         setLoading(false);
         return;
       }
-      
+
       // Fetch user's profile to get their full name
       const { data: { user: currentUser } } = await supabase.auth.getUser();
       if (currentUser) {
@@ -60,7 +62,7 @@ const Auth = () => {
           .select("full_name")
           .eq("id", currentUser.id)
           .maybeSingle();
-        
+
         const displayName = profile?.full_name || "there";
         toast({ title: `Welcome back, ${displayName}! 👋`, description: "You have successfully signed in." });
       }
@@ -107,13 +109,12 @@ const Auth = () => {
           transition={{ duration: 0.4 }}
           className="flex justify-center mb-7"
         >
-          <Link to="/" className="inline-flex items-center gap-2">
-            <div className="w-8 h-8 rounded-lg bg-accent flex items-center justify-center">
-              <span className="text-white font-black text-sm leading-none">C</span>
-            </div>
-            <span className="font-bold text-foreground text-lg tracking-tight">
-              Shuttle<span className="text-accent">CT</span>
-            </span>
+          <Link to="/" className="inline-flex items-center justify-center">
+            <img
+              src={logo}
+              alt="CTSC Travel Logo"
+              className="h-12 w-auto object-contain drop-shadow-sm"
+            />
           </Link>
         </motion.div>
 
@@ -132,11 +133,10 @@ const Auth = () => {
                 <button
                   key={label}
                   onClick={() => setIsLogin(i === 0)}
-                  className={`px-5 py-1.5 rounded-full text-xs font-semibold transition-all duration-200 ${
-                    active
+                  className={`px-5 py-1.5 rounded-full text-xs font-semibold transition-all duration-200 ${active
                       ? "bg-background text-foreground shadow-sm"
                       : "text-muted-foreground hover:text-foreground"
-                  }`}
+                    }`}
                 >
                   {label}
                 </button>

@@ -256,7 +256,7 @@ export const getPoiPriceForVehicle = (
 // Support contact info
 const SUPPORT_CONTACT = {
   whatsapp: "https://wa.me/27837668601",
-  email: "info@shuttlecapetown.com",
+  email: "info@ctsctravel.com",
   phone: "083 766 8601",
 };
 
@@ -304,7 +304,7 @@ const SupportSection = () => (
         <Mail className="w-4 h-4 text-accent" />
         <div className="text-left">
           <p className="text-xs font-semibold text-foreground">Email</p>
-          <p className="text-[11px] text-muted-foreground">info@shuttlecapetown.com</p>
+          <p className="text-[11px] text-muted-foreground">info@ctsctravel.com</p>
         </div>
       </a>
     </div>
@@ -315,22 +315,30 @@ const SupportSection = () => (
 // Step header / progress
 // ─────────────────────────────────────────────────────────────
 const StepProgress = ({ step }: { step: 1 | 2 | 3 }) => {
-  const steps = ["Trip details", "Choose your ride", "Confirm & pay"];
+  const steps = ["Trip details", "Choose ride", "Confirm & pay"];
   return (
-    <div className="flex items-center gap-1.5 sm:gap-2 mb-6">
+    <div className="flex items-center gap-1 mb-6">
       {steps.map((label, i) => {
         const n = (i + 1) as 1 | 2 | 3;
-        const active = step === n; const done = step > n;
+        const active = step === n;
+        const done = step > n;
         return (
-          <div key={label} className="flex items-center gap-2 flex-1">
+          <div key={label} className="flex items-center gap-1 flex-1 min-w-0">
             <div className={cn(
-              "w-7 h-7 rounded-full grid place-items-center text-[11px] font-bold shrink-0 transition-colors",
+              "w-6 h-6 sm:w-7 sm:h-7 rounded-full grid place-items-center text-[10px] sm:text-[11px] font-bold shrink-0 transition-colors",
               done ? "bg-accent text-white" : active ? "bg-accent text-white ring-4 ring-accent/20" : "bg-muted text-muted-foreground"
             )}>
-              {done ? <Check className="w-3.5 h-3.5" /> : n}
+              {done ? <Check className="w-3 h-3 sm:w-3.5 sm:h-3.5" /> : n}
             </div>
-            <span className={cn("text-xs sm:text-sm font-medium truncate", active ? "text-foreground" : "text-muted-foreground")}>{label}</span>
-            {i < steps.length - 1 && <div className={cn("flex-1 h-px", done ? "bg-accent" : "bg-border")} />}
+            <span className={cn(
+              "text-[10px] sm:text-sm font-medium truncate",
+              active ? "text-foreground" : "text-muted-foreground"
+            )}>
+              {label}
+            </span>
+            {i < steps.length - 1 && (
+              <div className={cn("flex-1 h-px shrink-0 min-w-[4px]", done ? "bg-accent" : "bg-border")} />
+            )}
           </div>
         );
       })}
@@ -354,7 +362,7 @@ const TripDetailsStep = ({ trip, setTrip, onNext, computing }: {
         <p className="text-sm text-muted-foreground">
           Need a custom quote?{" "}
           <a
-            href="mailto:info@shuttlecapetown.com?subject=Custom%20Shuttle%20Hire%20Itinerary"
+            href="mailto:info@ctsctravel.com?subject=Custom%20Shuttle%20Hire%20Itinerary"
             className="font-medium text-accent underline underline-offset-4"
           >
             Click to mail us your itinerary
