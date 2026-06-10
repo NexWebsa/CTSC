@@ -402,7 +402,7 @@ const FleetPreview = () => {
                       {/* Feature list */}
                       {selected.features && selected.features.length > 0 && (
                         <ul className="space-y-2">
-                          {selected.features.slice(0, 5).map((f, i) => (
+                          {selected.features.slice(0, 8).map((f, i) => (
                             <motion.li
                               key={i}
                               initial={{ opacity: 0, x: -8 }}
