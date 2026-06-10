@@ -4,7 +4,7 @@ import { ArrowRight } from "lucide-react";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import airport from "../assets/Airport-transfer.png";
-import point from "../assets/Point-to-point.jpg";
+import point from "../assets/ptp.jpg";
 import chauffeur from "../assets/VIP.png";
 import charter from "../assets/charter-bus.png";
 import dinner from "../assets/dinner-transfer.jpg";

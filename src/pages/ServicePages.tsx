@@ -17,7 +17,7 @@ import Footer from "@/components/Footer";
 import Seo from "@/components/Seo";
 import airportTransfersImage from "@/assets/Airport-transfer.png";
 import chauffeurServicesImage from "@/assets/VIP.png";
-import pointToPointImage from "@/assets/Point-to-point.jpg";
+import pointToPointImage from "@/assets/ptp.jpg";
 import employeeTransportImage from "@/assets/emptrans.jpg";
 import staffShuttleImage from "@/assets/stafftrans.png";
 
