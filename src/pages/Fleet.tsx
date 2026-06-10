@@ -7,6 +7,7 @@ import { supabase } from "@/lib/supabase";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import VehicleDetailModal from "@/components/fleet/VehicleDetailModal";
+import Seo from "@/components/Seo";
 
 interface Vehicle {
   id: string;
@@ -50,6 +51,11 @@ const Fleet = () => {
 
   return (
   <div className="min-h-screen">
+    <Seo
+      title="Our Fleet | Cape Town Shuttles, Sedans, Vans & Minibuses"
+      description="Browse the CTSC Travel fleet — sedans, SUVs, luxury vans and minibuses for airport transfers, chauffeur hire and group transport in Cape Town."
+      path="/fleet"
+    />
     <Navbar />
     <div className="pt-32 section-padding">
       <div className="container mx-auto">

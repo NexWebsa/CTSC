@@ -17,6 +17,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
+import Seo from "@/components/Seo";
 import { useToast } from "@/hooks/use-toast";
 
 const FORMSUBMIT_EMAIL = "info@ctsctravel.com";
@@ -123,6 +124,11 @@ const Contact = () => {
 
   return (
     <div className="min-h-screen flex flex-col">
+      <Seo
+        title="Contact CTSC Travel | Cape Town Shuttle Bookings & Quotes"
+        description="Get in touch with CTSC Travel for Cape Town shuttle bookings, quotes and corporate enquiries. Phone, email and contact form — 24/7 support."
+        path="/contact"
+      />
       <Navbar />
 
       {/* Hero Section */}

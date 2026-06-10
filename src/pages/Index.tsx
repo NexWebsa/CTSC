@@ -7,9 +7,15 @@ import FleetPreview from "@/components/FleetPreview";
 import WhyUs from "@/components/WhyUs";
 import Testimonials from "@/components/Testimonials";
 import Footer from "@/components/Footer";
+import Seo from "@/components/Seo";
 
 const Index = () => (
   <div className="min-h-screen">
+    <Seo
+      title="CTSC Travel | Cape Town Shuttle & Airport Transfers"
+      description="Premium Cape Town shuttle services: airport transfers, chauffeurs, group and corporate transport. Book online 24/7."
+      path="/"
+    />
     <Navbar />
     <Hero />
     <HowItWorks />

@@ -1,0 +1,27 @@
+# CTSC Travel
+
+> Premium Cape Town shuttle services: airport transfers, private chauffeur, point-to-point, corporate and staff transport, plus Cape Town tours. Online booking 24/7.
+
+CTSC Travel is a Cape Town-based transport company offering reliable, professional shuttle and chauffeur services across the greater Cape Town and Western Cape area. We serve private travellers, corporate clients and tour groups with a modern fleet ranging from sedans to luxury vans and minibuses.
+
+## Pages
+
+- [Home](/): Overview of CTSC Travel services, fleet and booking.
+- [About](/about): Company background, team and values.
+- [Services](/services): Full list of transport services offered.
+- [Fleet](/fleet): Vehicles available for hire with capacity and features.
+- [Book Now](/book): Online booking wizard with live pricing.
+- [Contact](/contact): Phone, email, address and contact form.
+- [Gallery](/gallery): Photos of vehicles and trips.
+
+## Services
+
+- [Airport Transfers](/services/airport-transfers): Cape Town International transfers with flight tracking and meet & greet.
+- [Chauffeur Services](/services/chauffeur): Professional drivers booked by the hour or day.
+- [Point-to-Point](/services/point-to-point): Direct transfers anywhere in the Cape Town area.
+- [Employee Transportation](/services/employee-transportation): Corporate commuter solutions.
+- [Staff Shuttle](/services/staff-shuttle): Shift-aligned group transport for businesses.
+
+## Optional
+
+- [Terms](/terms): Terms and conditions.

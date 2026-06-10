@@ -89,10 +89,18 @@ const services = [
   },
 ];
 
+import Seo from "@/components/Seo";
+
 const Services = () => {
   return (
     <div className="min-h-screen">
+      <Seo
+        title="Cape Town Shuttle Services | Airport, Chauffeur & Corporate"
+        description="Explore CTSC Travel services: airport transfers, chauffeur hire, point-to-point transfers, staff shuttles and corporate transport across Cape Town."
+        path="/services"
+      />
       <Navbar />
+
 
       {/* Header */}
       <div className="pt-32 section-padding bg-background">

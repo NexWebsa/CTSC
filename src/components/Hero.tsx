@@ -72,25 +72,24 @@ const Hero = () => {
             </span>
           </motion.div>
 
-          {/* Giant display headline */}
-          <motion.div style={{ y: textY }} className="mb-6 sm:mb-8 w-full">
+          <motion.h1 style={{ y: textY }} className="mb-6 sm:mb-8 w-full">
             <div className="overflow-hidden mb-1">
-              <motion.h1
+              <motion.span
                 initial={{ y: "110%" }}
                 animate={{ y: 0 }}
                 transition={{ duration: 0.9, delay: 0.5, ease: [0.16, 1, 0.3, 1] }}
-                className="text-[clamp(3.5rem,15vw,5rem)] sm:text-[clamp(3.5rem,8vw,7rem)] font-black leading-[0.9] tracking-tight text-white"
+                className="block text-[clamp(3.5rem,15vw,5rem)] sm:text-[clamp(3.5rem,8vw,7rem)] font-black leading-[0.9] tracking-tight text-white"
                 style={{ fontFamily: "'Bebas Neue', sans-serif", letterSpacing: "0.02em" }}
               >
                 YOUR
-              </motion.h1>
+              </motion.span>
             </div>
             <div className="overflow-hidden mb-1 lg:ml-[0.08em]">
-              <motion.h1
+              <motion.span
                 initial={{ y: "110%" }}
                 animate={{ y: 0 }}
                 transition={{ duration: 0.9, delay: 0.62, ease: [0.16, 1, 0.3, 1] }}
-                className="text-[clamp(3.5rem,15vw,5rem)] sm:text-[clamp(3.5rem,8vw,7rem)] font-black leading-[0.9] tracking-tight"
+                className="block text-[clamp(3.5rem,15vw,5rem)] sm:text-[clamp(3.5rem,8vw,7rem)] font-black leading-[0.9] tracking-tight"
                 style={{
                   fontFamily: "'Bebas Neue', sans-serif",
                   letterSpacing: "0.02em",
@@ -99,20 +98,20 @@ const Hero = () => {
                 }}
               >
                 JOURNEY,
-              </motion.h1>
+              </motion.span>
             </div>
             <div className="overflow-hidden">
-              <motion.h1
+              <motion.span
                 initial={{ y: "110%" }}
                 animate={{ y: 0 }}
                 transition={{ duration: 0.9, delay: 0.74, ease: [0.16, 1, 0.3, 1] }}
-                className="text-[clamp(3.5rem,15vw,5rem)] sm:text-[clamp(3.5rem,8vw,7rem)] font-black leading-[0.9] tracking-tight text-white"
+                className="block text-[clamp(3.5rem,15vw,5rem)] sm:text-[clamp(3.5rem,8vw,7rem)] font-black leading-[0.9] tracking-tight text-white"
                 style={{ fontFamily: "'Bebas Neue', sans-serif", letterSpacing: "0.02em" }}
               >
                 OUR CARE.
-              </motion.h1>
+              </motion.span>
             </div>
-          </motion.div>
+          </motion.h1>
 
           {/* Descriptor - mobile: short tagline only */}
           <motion.p

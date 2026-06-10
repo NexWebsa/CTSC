@@ -6,6 +6,7 @@ import { ScrollTrigger } from "gsap/ScrollTrigger";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import { Button } from "@/components/ui/button";
+import Seo from "@/components/Seo";
 
 // vehicles
 import bmw from "@/assets/bmw.jpg";
@@ -221,6 +222,11 @@ export default function Gallery() {
 
   return (
     <div className="min-h-screen" style={{ background: "#FCFAF8" }}>
+      <Seo
+        title="Gallery | CTSC Travel Cape Town Shuttle Fleet & Trips"
+        description="Photo gallery of the CTSC Travel fleet, drivers and trips around Cape Town — airport transfers, tours and corporate shuttles in action."
+        path="/gallery"
+      />
       <Navbar />
 
       {/* ══ HERO ══════════════════════════════════════════════════════════════ */}

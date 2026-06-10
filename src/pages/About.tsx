@@ -4,11 +4,17 @@ import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
+import Seo from "@/components/Seo";
 import fleetwithstaffImage from "@/assets/fleetwithstaff.jpg";
 import fleetwith1Image from "@/assets/fleetwith1.jpg";
 
 const About = () => (
   <div className="min-h-screen">
+    <Seo
+      title="About CTSC Travel | Cape Town's Premium Shuttle Team"
+      description="Meet CTSC Travel — a Cape Town shuttle company known for punctual, professional and discreet transport. Learn about our team, fleet and values."
+      path="/about"
+    />
     <Navbar />
 
     {/* Hero Section */}

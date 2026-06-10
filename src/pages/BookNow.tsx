@@ -3,12 +3,18 @@ import Navbar from "@/components/Navbar";
 import AuthNavbar from "@/components/AuthNavbar";
 import Footer from "@/components/Footer";
 import BookingWizard from "@/components/booking/BookingWizard";
+import Seo from "@/components/Seo";
 import { useAuth } from "@/contexts/AuthContext";
 
 const BookNow = () => {
   const { user } = useAuth();
   return (
     <div className="min-h-screen flex flex-col">
+      <Seo
+        title="Book a Cape Town Shuttle | Instant Quote & Online Booking"
+        description="Book your Cape Town shuttle or airport transfer online. Get an instant quote, choose your vehicle and pay securely. No account required."
+        path="/book"
+      />
       {user ? <AuthNavbar role="user" /> : <Navbar />}
       <div className="flex-grow pt-24 sm:pt-28 pb-16 bg-background">
         <div className="container mx-auto max-w-5xl px-4">

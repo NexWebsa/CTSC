@@ -14,6 +14,7 @@ import {
 } from "lucide-react";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
+import Seo from "@/components/Seo";
 import airportTransfersImage from "@/assets/AIRPORT-TRANSFERS.jpeg";
 import chauffeurServicesImage from "@/assets/CHAUFFEUR-SERVICES.jpg";
 import pointToPointImage from "@/assets/POINT-TO-POINT.jpg";
@@ -29,6 +30,9 @@ interface ServicePageProps {
   why?: string;
   icon?: React.ReactNode;
   image?: string;
+  seoTitle: string;
+  seoDescription: string;
+  path: string;
 }
 
 const ServicePage = ({
@@ -40,8 +44,12 @@ const ServicePage = ({
   why,
   icon,
   image,
+  seoTitle,
+  seoDescription,
+  path,
 }: ServicePageProps) => (
   <div className="min-h-screen">
+    <Seo title={seoTitle} description={seoDescription} path={path} />
     <Navbar />
 
     {/* Hero Section */}
@@ -209,6 +217,9 @@ const ServicePage = ({
 
 export const AirportTransfers = () => (
   <ServicePage
+    seoTitle="Cape Town Airport Transfers | Flight-Tracked Shuttles"
+    seoDescription="Punctual Cape Town International airport transfers with real-time flight tracking, meet & greet and fixed pricing. Book online 24/7."
+    path="/services/airport-transfers"
     title="Airport Transfers"
     subtitle="Reliable & Punctual"
     description={[
@@ -236,6 +247,9 @@ export const AirportTransfers = () => (
 
 export const ChauffeurServices = () => (
   <ServicePage
+    seoTitle="Private Chauffeur Cape Town | Hourly & Daily Hire"
+    seoDescription="Professional chauffeur services in Cape Town for business, tours and events. Hourly or daily hire with vetted, multilingual drivers."
+    path="/services/chauffeur"
     title="Chauffeur Services"
     subtitle="Your Personal Driver"
     description={[
@@ -263,6 +277,9 @@ export const ChauffeurServices = () => (
 
 export const PointToPoint = () => (
   <ServicePage
+    seoTitle="Point-to-Point Transfers Cape Town | Direct Shuttles"
+    seoDescription="Direct point-to-point transfers across greater Cape Town — Winelands, Waterfront and beyond. Transparent pricing and 24/7 availability."
+    path="/services/point-to-point"
     title="Point-to-Point Transfers"
     subtitle="Direct & Efficient"
     description={[
@@ -286,6 +303,9 @@ export const PointToPoint = () => (
 
 export const EmployeeTransportation = () => (
   <ServicePage
+    seoTitle="Employee Transportation Cape Town | Corporate Commute"
+    seoDescription="Reliable employee transportation across Cape Town. Customised commuter routes, modern vehicles and monthly corporate billing."
+    path="/services/employee-transportation"
     title="Employee Transportation"
     subtitle="Corporate Commute Solutions"
     description={[
@@ -313,6 +333,9 @@ export const EmployeeTransportation = () => (
 
 export const StaffShuttleService = () => (
   <ServicePage
+    seoTitle="Staff Shuttle Service Cape Town | Shift Group Transport"
+    seoDescription="Shift-aligned staff shuttle services in Cape Town. Minibuses to coaches, 24/7 availability and dedicated account management."
+    path="/services/staff-shuttle"
     title="Staff Shuttle Service"
     subtitle="Group & Shift Transport"
     description={[

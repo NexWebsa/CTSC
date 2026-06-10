@@ -3,6 +3,7 @@ import { useState, useEffect } from "react";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import TermsContent from "@/components/TermsContent";
+import Seo from "@/components/Seo";
 
 const Terms = () => {
   const [activeSection, setActiveSection] = useState(0);
@@ -44,6 +45,11 @@ const Terms = () => {
 
   return (
     <div className="min-h-screen flex flex-col bg-gradient-to-b from-background to-background/95">
+      <Seo
+        title="Terms & Conditions | CTSC Travel"
+        description="CTSC Travel terms and conditions — bookings, cancellations, refunds, luggage, safety and privacy policies for our Cape Town shuttle services."
+        path="/terms"
+      />
       <Navbar />
       <div className="flex-grow pt-20 section-padding">
         {/* Hero Section */}
