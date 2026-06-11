@@ -175,7 +175,7 @@ const FleetPreview = () => {
           </h2>
           <p className="text-muted-foreground max-w-xl mx-auto mt-5 text-base leading-relaxed">
             Every vehicle is fully licensed, insured, and meticulously
-            maintained — from sleek sedans to spacious minibuses.
+            maintained from sleek sedans to spacious minibuses.
           </p>
         </motion.div>
 
@@ -402,7 +402,7 @@ const FleetPreview = () => {
                       {/* Feature list */}
                       {selected.features && selected.features.length > 0 && (
                         <ul className="space-y-2">
-                          {selected.features.slice(0, 8).map((f, i) => (
+                          {selected.features.slice(3, 8).map((f, i) => (
                             <motion.li
                               key={i}
                               initial={{ opacity: 0, x: -8 }}

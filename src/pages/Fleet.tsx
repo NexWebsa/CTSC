@@ -82,7 +82,7 @@ const Fleet = () => {
               </span>
             </h1>
             <p className="text-muted-foreground mt-5 text-base leading-relaxed">
-              From sleek sedans to spacious minibuses — every vehicle is fully
+              From sleek sedans to spacious minibuses, every vehicle is fully
               licensed, insured and meticulously maintained.
             </p>
           </motion.div>

@@ -290,7 +290,7 @@ const ServicesOverview = () => {
 
                     <p className="text-background/70 mt-4 text-sm sm:text-base leading-relaxed">
                       Airport transfers, private trips, tours, corporate travel,
-                      and custom transport — all in one place.
+                      and custom transport, all in one place.
                     </p>
                   </div>
 

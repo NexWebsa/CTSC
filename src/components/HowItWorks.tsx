@@ -76,7 +76,7 @@ const HowItWorks = () => {
           </h2>
 
           <p className="text-muted-foreground max-w-xl mx-auto mt-4 text-base leading-relaxed">
-            Booking your ride with CTSC Travel is quick, simple and secure —
+            Booking your ride with CTSC Travel is quick, simple and secure
             from route selection to confirmed transport.
           </p>
         </motion.div>
