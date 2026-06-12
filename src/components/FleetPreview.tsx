@@ -320,12 +320,12 @@ const FleetPreview = () => {
                         <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/10 to-transparent pointer-events-none" />
 
                         {/* Capacity badge */}
-                        <div className="absolute bottom-0 left-0 right-0 px-4 py-3 flex items-center justify-between gap-3 bg-gradient-to-t from-black/70 to-transparent">
+                        <div className="absolute bottom-0 left-0 right-0 px-4 py-3 flex flex-col sm:flex-row sm:items-end sm:justify-between gap-2 sm:gap-3 bg-gradient-to-t from-black/75 via-black/40 to-transparent">
                           <motion.span
                             initial={{ opacity: 0 }}
                             animate={{ opacity: 1 }}
                             transition={{ delay: 0.15 }}
-                            className="text-white font-bold text-lg drop-shadow-lg leading-tight lg:hidden truncate"
+                            className="text-white font-bold text-base sm:text-lg drop-shadow-lg leading-tight lg:hidden min-w-0 break-words"
                           >
                             {selected.name}
                           </motion.span>
@@ -333,7 +333,7 @@ const FleetPreview = () => {
                             initial={{ opacity: 0, x: -8 }}
                             animate={{ opacity: 1, x: 0 }}
                             transition={{ delay: 0.2 }}
-                            className="inline-flex items-center gap-1.5 bg-black/55 backdrop-blur-md text-white px-3 py-1.5 rounded-lg text-xs font-medium border border-white/10 flex-shrink-0 ml-auto"
+                            className="inline-flex items-center gap-1.5 bg-black/55 backdrop-blur-md text-white px-3 py-1.5 rounded-lg text-xs font-medium border border-white/10 flex-shrink-0 self-start sm:self-auto sm:ml-auto"
                           >
                             <Users className="w-3.5 h-3.5 text-accent" />
                             Up to {selected.capacity} passengers

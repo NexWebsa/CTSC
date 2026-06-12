@@ -130,11 +130,6 @@ const WhyUs = () => {
                 {/* Top shine */}
                 <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-accent/60 to-transparent" />
 
-                {/* Background index */}
-                <div className="absolute -right-2 -bottom-5 text-[6.5rem] font-black leading-none text-foreground/[0.035] tracking-tighter select-none">
-                  0{i + 1}
-                </div>
-
                 {/* Icon */}
                 <div className="relative z-10 mb-6">
                   <motion.div

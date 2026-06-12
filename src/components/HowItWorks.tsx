@@ -24,7 +24,7 @@ const steps = [
     icon: CreditCard,
     title: "Confirm & Pay",
     description:
-      "Add the passenger details, confirm your booking and complete secure payment with Yoco.",
+      "Add your details, confirm booking and complete payment with Yoco.",
   },
 ];
 
@@ -121,11 +121,6 @@ const HowItWorks = () => {
 
                   {/* Top shine */}
                   <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-accent/60 to-transparent" />
-
-                  {/* Big background step number */}
-                  <div className="absolute -right-3 -bottom-5 text-[7rem] font-black leading-none text-foreground/[0.035] tracking-tighter select-none">
-                    0{i + 1}
-                  </div>
 
                   {/* Icon */}
                   <div className="relative z-10 flex justify-center mb-6">
