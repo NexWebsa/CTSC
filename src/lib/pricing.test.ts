@@ -14,9 +14,9 @@ describe("distance rate-card pricing", () => {
   it.each([
     [1, 1350],
     [20, 1350],
-    [21, 1450],
+    [21, 1350],
     [28, 1450],
-    [29, 1500],
+    [29, 1450],
     [34, 1500],
     [35, 1550],
     [40, 1550],
@@ -34,9 +34,9 @@ describe("distance rate-card pricing", () => {
   it.each([
     [1, 1650],
     [20, 1650],
-    [21, 1700],
+    [21, 1650],
     [28, 1700],
-    [29, 1750],
+    [29, 1700],
     [34, 1750],
     [35, 1850],
     [40, 1850],
@@ -57,9 +57,64 @@ describe("distance rate-card pricing", () => {
     expect(lookupTablePrice("Luxury Van (V Class)", 80, "luxury_mercedes_van")).toBe(2150);
   });
 
+  it.each([
+    [0, 580],
+    [21, 580],
+    [22, 650],
+    [29, 650],
+    [30, 720],
+    [34, 720],
+    [35, 800],
+    [40, 800],
+    [41, 900],
+    [49, 900],
+    [50, 1050],
+    [60, 1050],
+    [61, 1150],
+    [70, 1150],
+    [80, 1350],
+    [89, 1350],
+    [90, 1650],
+    [110, 1650],
+  ])("prices Small MPV 1-5 airport transfers at %s km", (distanceKm, expected) => {
+    const smallMpv = vehicle("Small MPV (Suzuki Ertiga)", "small_mpv_1_5");
+
+    expect(quoteVehicle(smallMpv, {
+      distanceKm,
+      isReturn: false,
+      serviceType: "airport_transfer",
+      extrasTotal: 0,
+    })).toBe(expected);
+  });
+
+  it("keeps Small MPV non-airport distance pricing on the existing table", () => {
+    const smallMpv = vehicle("Small MPV (Suzuki Ertiga)", "small_mpv_1_5");
+
+    expect(quoteVehicle(smallMpv, {
+      distanceKm: 20,
+      isReturn: false,
+      serviceType: "point_to_point",
+      extrasTotal: 0,
+    })).toBe(480);
+  });
+
+  it("keeps Shuttle Hire POI pricing for Small MPV 1-5", () => {
+    const smallMpv = vehicle("Small MPV (Suzuki Ertiga)", "small_mpv_1_5");
+
+    expect(quoteVehicle(smallMpv, {
+      distanceKm: 20,
+      isReturn: false,
+      serviceType: "chauffeur",
+      hours: 4,
+      extrasTotal: 100,
+      poiPrice: 2500,
+    })).toBe(2600);
+  });
+
   it("uses corrected table pricing in quote totals stored before Yoco checkout", () => {
     const mercedesC = vehicle("Mercedes C Class", "mercedes_c");
     const blackVClass = vehicle("Mercedes V Class 300", "luxury_v_class_vip");
+    const smallMpv = vehicle("Small MPV (Suzuki Ertiga)", "small_mpv_1_5");
 
     expect(quoteVehicle(mercedesC, {
       distanceKm: 28,
@@ -74,5 +129,12 @@ describe("distance rate-card pricing", () => {
       serviceType: "point_to_point",
       extrasTotal: 150,
     })).toBe(4250);
+
+    expect(quoteVehicle(smallMpv, {
+      distanceKm: 50,
+      isReturn: true,
+      serviceType: "airport_transfer",
+      extrasTotal: 100,
+    })).toBe(2200);
   });
 });

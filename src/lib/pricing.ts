@@ -65,7 +65,8 @@ export function computeExtrasTotal(
 const DISTANCE_BANDS = [21, 29, 34, 40, 49, 60, 70, 89, 110] as const;
 
 type VehicleKey =
-  | "small_mpv"
+  | "small_mpv_1_3"
+  | "small_mpv_1_5"
   | "bmw_5"
   | "mercedes_c"
   | "fortuner"
@@ -77,7 +78,8 @@ type VehicleKey =
   | "coaster";
 
 const PRICE_TABLE: Record<VehicleKey, number[]> = {
-  small_mpv:   [480, 540, 600, 650, 700, 750, 850, 950, 1350],
+  small_mpv_1_3: [480, 540, 600, 650, 700, 750, 850, 950, 1350],
+  small_mpv_1_5: [480, 540, 600, 650, 700, 750, 850, 950, 1350],
   bmw_5:       [950, 1000, 1050, 1100, 1200, 1250, 1350, 1450, 1500],
   mercedes_c:  [1350, 1450, 1500, 1550, 1600, 1650, 1650, 1850, 1850],
   fortuner:    [850, 950, 1000, 1050, 1100, 1150, 1250, 1350, 1400],
@@ -89,9 +91,14 @@ const PRICE_TABLE: Record<VehicleKey, number[]> = {
   coaster:     [2350, 2500, 2600, 2600, 2700, 2800, 2900, 3250, 3500],
 };
 
+const AIRPORT_TRANSFER_PRICE_OVERRIDES: Partial<Record<VehicleKey, number[]>> = {
+  small_mpv_1_5: [580, 650, 720, 800, 900, 1050, 1150, 1350, 1650],
+};
+
 function matchVehicleKey(name: string, slug?: string | null): VehicleKey | null {
   const s = (slug || "").toLowerCase();
-  if (s === "small_mpv_1_3" || s === "small_mpv_1_5") return "small_mpv";
+  if (s === "small_mpv_1_3") return "small_mpv_1_3";
+  if (s === "small_mpv_1_5") return "small_mpv_1_5";
   if (s === "bmw_5") return "bmw_5";
   if (s === "mercedes_c") return "mercedes_c";
   if (s === "fortuner") return "fortuner";
@@ -123,15 +130,14 @@ function matchVehicleKey(name: string, slug?: string | null): VehicleKey | null 
   if (n.includes("minibus") || n.includes("qtm") || n.includes("quantum")) {
     return n.includes("new") ? "minibus_new" : "minibus_old";
   }
-  if (n.includes("suzuki") || n.includes("mpv")) return "small_mpv";
+  if ((n.includes("suzuki") || n.includes("mpv")) && n.includes("1") && n.includes("3")) {
+    return "small_mpv_1_3";
+  }
+  if (n.includes("suzuki") || n.includes("mpv")) return "small_mpv_1_5";
   return null;
 }
 
-/** Look up base price from the rate card. Returns null when no mapping. */
-export function lookupTablePrice(vehicleName: string, distanceKm: number, vehicleSlug?: string | null): number | null {
-  const key = matchVehicleKey(vehicleName, vehicleSlug);
-  if (!key) return null;
-  const row = PRICE_TABLE[key];
+function lookupPriceFromRow(row: number[], distanceKm: number): number {
   const d = Math.max(0, distanceKm);
   if (d <= 0) return row[0];
   for (let i = 0; i < DISTANCE_BANDS.length; i++) {
@@ -141,6 +147,19 @@ export function lookupTablePrice(vehicleName: string, distanceKm: number, vehicl
   const last = row[row.length - 1];
   const perKm = last / DISTANCE_BANDS[DISTANCE_BANDS.length - 1];
   return Math.ceil((last + (d - 110) * perKm) / 10) * 10;
+}
+
+/** Look up base price from the rate card. Returns null when no mapping. */
+export function lookupTablePrice(vehicleName: string, distanceKm: number, vehicleSlug?: string | null): number | null {
+  const key = matchVehicleKey(vehicleName, vehicleSlug);
+  if (!key) return null;
+  return lookupPriceFromRow(PRICE_TABLE[key], distanceKm);
+}
+
+function lookupAirportTransferPrice(vehicleName: string, distanceKm: number, vehicleSlug?: string | null): number | null {
+  const key = matchVehicleKey(vehicleName, vehicleSlug);
+  if (!key) return null;
+  return lookupPriceFromRow(AIRPORT_TRANSFER_PRICE_OVERRIDES[key] ?? PRICE_TABLE[key], distanceKm);
 }
 
 export function quoteVehicle(vehicle: Vehicle, input: QuoteInput): number {
@@ -158,7 +177,9 @@ export function quoteVehicle(vehicle: Vehicle, input: QuoteInput): number {
   }
 
   // Distance-based pricing — use the rate-card table whenever vehicle maps
-  const tablePrice = lookupTablePrice(vehicle.name, input.distanceKm, vehicle.slug);
+  const tablePrice = input.serviceType === "airport_transfer"
+    ? lookupAirportTransferPrice(vehicle.name, input.distanceKm, vehicle.slug)
+    : lookupTablePrice(vehicle.name, input.distanceKm, vehicle.slug);
   if (tablePrice != null) {
     let total = tablePrice;
     if (input.isReturn) total *= 2; // simple return = double the one-way table price
