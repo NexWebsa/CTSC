@@ -192,18 +192,18 @@ const Footer = () => {
 
         {/* ── Bottom bar ── */}
         <div
-          className="py-6 flex flex-col sm:flex-row items-center justify-between gap-3 border-t"
+          className="py-6 flex flex-col sm:flex-row items-center justify-center sm:justify-between gap-4 sm:gap-3 border-t text-center sm:text-left"
           style={{ borderColor: "rgba(255,255,255,0.07)" }}
         >
           <span
-            className="text-xs"
+            className="text-xs block max-w-xs sm:max-w-none mx-auto sm:mx-0 leading-relaxed"
             style={{
               color: "rgba(255,255,255,0.25)",
               fontFamily: "'DM Mono', monospace",
               letterSpacing: "0.08em",
             }}
           >
-            © {currentYear} Shuttle Cape Town. Powered by <a href="https://nexwebsa.co.za/" target="_blank" rel="noopener noreferrer" style={{ color: "rgba(255,255,255,0.25)"}} >NexWeb</a>. All rights reserved.
+            © {currentYear} Shuttle Cape Town. Powered by <a href="https://nexwebsa.co.za/" target="_blank" rel="noopener noreferrer" style={{ color: "rgba(255,255,255,0.25)" }} >NexWeb</a>. All rights reserved.
           </span>
 
           {/* Socials */}
@@ -214,9 +214,9 @@ const Footer = () => {
                 label: "Instagram",
                 icon: (
                   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" className="w-4 h-4">
-                    <rect x="2" y="2" width="20" height="20" rx="5" ry="5"/>
-                    <circle cx="12" cy="12" r="4"/>
-                    <circle cx="17.5" cy="6.5" r="0.6" fill="currentColor" stroke="none"/>
+                    <rect x="2" y="2" width="20" height="20" rx="5" ry="5" />
+                    <circle cx="12" cy="12" r="4" />
+                    <circle cx="17.5" cy="6.5" r="0.6" fill="currentColor" stroke="none" />
                   </svg>
                 ),
               },
@@ -225,7 +225,7 @@ const Footer = () => {
                 label: "Facebook",
                 icon: (
                   <svg viewBox="0 0 24 24" fill="currentColor" className="w-4 h-4">
-                    <path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z"/>
+                    <path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z" />
                   </svg>
                 ),
               },
