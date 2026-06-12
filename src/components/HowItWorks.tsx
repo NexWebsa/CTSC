@@ -13,17 +13,23 @@ const steps = [
     title: "Create Your Route",
     description:
       "Enter your pickup, drop-off, travel date and time to view availability and trip details.",
+    mobileDescription:
+      "Enter pickup, drop-off, date and time to view availability.",
   },
   {
     icon: CarFront,
     title: "Choose Your Vehicle",
     description:
       "Select the vehicle that best suits your journey, passenger count and travel style.",
+    mobileDescription:
+      "Select the vehicle that suits your journey and passenger count.",
   },
   {
     icon: CreditCard,
     title: "Confirm & Pay",
     description:
+      "Add your details, confirm booking and complete payment with Yoco.",
+    mobileDescription:
       "Add your details, confirm booking and complete payment with Yoco.",
   },
 ];
@@ -98,7 +104,7 @@ const HowItWorks = () => {
             />
           </div>
 
-          <div className="grid md:grid-cols-3 gap-5 sm:gap-6">
+          <div className="grid md:grid-cols-3 gap-3 sm:gap-6">
             {steps.map((step, i) => (
               <motion.div
                 key={step.title}
@@ -112,7 +118,7 @@ const HowItWorks = () => {
                 }}
                 className="relative group"
               >
-                <div className="relative h-full overflow-hidden rounded-[1.75rem] border border-border/80 bg-card/80 backdrop-blur-xl p-6 sm:p-7 text-center transition-all duration-500 hover:border-accent/40 hover:shadow-2xl hover:shadow-accent/10">
+                <div className="relative h-full overflow-hidden rounded-[1.75rem] border border-border/80 bg-card/80 backdrop-blur-xl p-5 sm:p-7 text-center transition-all duration-500 hover:border-accent/40 hover:shadow-2xl hover:shadow-accent/10">
                   {/* Hover glow */}
                   <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none">
                     <div className="absolute -top-24 left-1/2 h-48 w-48 -translate-x-1/2 rounded-full bg-accent/12 blur-3xl" />
@@ -154,7 +160,13 @@ const HowItWorks = () => {
                       {step.title}
                     </h3>
 
-                    <p className="text-sm text-muted-foreground leading-relaxed max-w-xs mx-auto">
+                    {/* Mobile description */}
+                    <p className="sm:hidden text-sm text-muted-foreground leading-relaxed max-w-xs mx-auto">
+                      {step.mobileDescription}
+                    </p>
+
+                    {/* Desktop description */}
+                    <p className="hidden sm:block text-sm text-muted-foreground leading-relaxed max-w-xs mx-auto">
                       {step.description}
                     </p>
                   </div>
@@ -170,15 +182,15 @@ const HowItWorks = () => {
 
                 {/* Mobile connector arrow */}
                 {i < steps.length - 1 && (
-                  <div className="md:hidden flex justify-center py-4">
+                  <div className="md:hidden flex justify-center py-2">
                     <motion.div
                       initial={{ opacity: 0, y: -4 }}
                       whileInView={{ opacity: 1, y: 0 }}
                       viewport={{ once: true }}
                       transition={{ delay: 0.25 }}
-                      className="w-9 h-9 rounded-full border border-accent/20 bg-accent/8 flex items-center justify-center"
+                      className="w-8 h-8 rounded-full border border-accent/20 bg-accent/8 flex items-center justify-center"
                     >
-                      <ArrowRight className="w-4 h-4 text-accent rotate-90" />
+                      <ArrowRight className="w-3.5 h-3.5 text-accent rotate-90" />
                     </motion.div>
                   </div>
                 )}

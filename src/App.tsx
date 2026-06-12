@@ -16,8 +16,8 @@ import {
   AirportTransfers,
   ChauffeurServices,
   PointToPoint,
-  EmployeeTransportation,
-  StaffShuttleService,
+  // EmployeeTransportation,
+  // StaffShuttleService,
 } from "./pages/ServicePages";
 import Services from "./pages/Services";
 import Fleet from "./pages/Fleet";
@@ -73,14 +73,14 @@ const App = () => (
             />
             <Route path="/services/chauffeur" element={<ChauffeurServices />} />
             <Route path="/services/point-to-point" element={<PointToPoint />} />
-            <Route
+            {/* <Route
               path="/services/employee-transportation"
               element={<EmployeeTransportation />}
             />
             <Route
               path="/services/staff-shuttle"
               element={<StaffShuttleService />}
-            />
+            /> */}
             <Route path="/services" element={<Services />} />
             <Route path="/fleet" element={<Fleet />} />
             <Route path="/book" element={<BookNow />} />

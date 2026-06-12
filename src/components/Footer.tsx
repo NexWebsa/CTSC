@@ -130,8 +130,8 @@ const Footer = () => {
                 { label: "Airport Transfers", path: "/services/airport-transfers" },
                 { label: "Chauffeur Services", path: "/services/chauffeur" },
                 { label: "Point-to-Point", path: "/services/point-to-point" },
-                { label: "Employee Transport", path: "/services/employee-transportation" },
-                { label: "Staff Shuttle", path: "/services/staff-shuttle" },
+                // { label: "Employee Transport", path: "/services/employee-transportation" },
+                // { label: "Staff Shuttle", path: "/services/staff-shuttle" },
               ].map((link) => (
                 <li key={link.path}>
                   <Link

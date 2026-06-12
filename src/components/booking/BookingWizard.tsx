@@ -67,7 +67,7 @@ interface PassengerData {
 const TABS: { value: ServiceTab; label: string; icon: typeof Plane }[] = [
   { value: "airport_transfer", label: "Airport Transfer", icon: Plane },
   { value: "chauffeur", label: "Shuttle Hire", icon: Car },
-  { value: "point_to_point", label: "Staff Service", icon: Briefcase },
+  // { value: "point_to_point", label: "Staff Service", icon: Briefcase },
 ];
 
 const initialTrip = (s: ServiceTab): TripData => ({
@@ -476,7 +476,7 @@ const TripDetailsStep = ({ trip, setTrip, onNext, computing }: {
             <Label className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">Duration (hours) *</Label>
             <Select value={String(trip.hours)} onValueChange={(v) => update("hours", parseInt(v))}>
               <SelectTrigger className="h-11"><SelectValue /></SelectTrigger>
-              <SelectContent>{[2,3,4,5,6,8,10,12].map(h => <SelectItem key={h} value={String(h)}>{h} hours</SelectItem>)}</SelectContent>
+              <SelectContent>{[2, 3, 4, 5, 6, 8, 10, 12].map(h => <SelectItem key={h} value={String(h)}>{h} hours</SelectItem>)}</SelectContent>
             </Select>
           </div>
         )}
@@ -564,28 +564,35 @@ const VehicleSelectStep = ({ trip, vehicles, selectedPoi, selected, onSelect, on
   <div className="space-y-6">
     {/* Cancellation Notice */}
     <CancellationNotice isGuest={isGuest} />
-    <div className="rounded-2xl border border-border bg-secondary/30 p-4 grid sm:grid-cols-4 gap-4 text-sm">
-      <div className="space-y-0.5">
+    <div
+      className={cn(
+        "rounded-2xl border border-border bg-secondary/30 p-4 grid grid-cols-2 gap-3 text-sm overflow-hidden w-full",
+        trip.serviceType === "chauffeur" ? "sm:grid-cols-3" : "sm:grid-cols-4"
+      )}
+    >
+      <div className="space-y-0.5 min-w-0">
         <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">From</p>
-        <p className="font-medium truncate">{trip.pickup}</p>
+        <p className="font-medium text-xs sm:text-sm break-words leading-snug">{trip.pickup}</p>
       </div>
-      <div className="space-y-0.5">
+      <div className="space-y-0.5 min-w-0">
         <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">To</p>
-        <p className="font-medium truncate">{trip.serviceType === "chauffeur" ? (trip.pointsOfInterest || trip.dropoff) : trip.dropoff}</p>
+        <p className="font-medium text-xs sm:text-sm break-words leading-snug">{trip.serviceType === "chauffeur" ? (trip.pointsOfInterest || trip.dropoff) : trip.dropoff}</p>
       </div>
-      <div className="space-y-0.5">
+      <div className="space-y-0.5 min-w-0">
         <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">When</p>
-        <p className="font-medium">
-          {trip.pickupDate} - {trip.pickupTime}
-          {trip.serviceType === "chauffeur" && trip.endTime ? ` to ${trip.endTime}` : ""}
+        <p className="font-medium text-xs sm:text-sm break-words leading-snug">
+          {trip.pickupDate} – {trip.pickupTime}
+          {trip.serviceType === "chauffeur" && trip.endTime ? `–${trip.endTime}` : ""}
         </p>
       </div>
-      <div className="space-y-0.5">
-        <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">Distance</p>
-        <p className="font-medium">
-          {trip.distanceKm ? `${trip.distanceKm.toFixed(1)} km` : "—"}
-        </p>
-      </div>
+      {trip.serviceType !== "chauffeur" && (
+        <div className="space-y-0.5 min-w-0">
+          <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">Distance</p>
+          <p className="font-medium text-xs sm:text-sm">
+            {trip.distanceKm != null ? `${trip.distanceKm.toFixed(1)} km` : "—"}
+          </p>
+        </div>
+      )}
     </div>
 
     {loading ? (
@@ -742,7 +749,7 @@ const PassengerStep = ({
       </div>
 
       {/* Order summary */}
-      <aside className="lg:sticky lg:top-24 h-fit space-y-4 rounded-2xl border border-border bg-card p-5">
+      <aside className="lg:sticky lg:top-24 h-fit space-y-4 rounded-2xl border border-border bg-card p-5 overflow-hidden min-w-0">
         <p className="text-xs font-bold uppercase tracking-widest text-muted-foreground">Booking summary</p>
         {vehicle.image_url && <img src={vehicle.image_url} alt={vehicle.name} className="w-full aspect-[16/9] object-cover rounded-xl" />}
         <div className="space-y-2 text-sm">
@@ -755,7 +762,9 @@ const PassengerStep = ({
           )}
           {trip.serviceType === "chauffeur" && <Row label="Duration" value={`${trip.hours} hours`} />}
           {trip.serviceType === "chauffeur" && trip.pointsOfInterest && <Row label="Interest" value={trip.pointsOfInterest} truncate />}
-          {trip.serviceType !== "chauffeur" && trip.distanceKm && <Row label="Distance" value={`${trip.distanceKm.toFixed(1)} km`} />}
+          {trip.serviceType !== "chauffeur" && trip.distanceKm != null && (
+            <Row label="Distance" value={`${trip.distanceKm.toFixed(1)} km`} />
+          )}
           <Row label="Passengers" value={String(trip.passengers)} />
         </div>
 
@@ -804,7 +813,7 @@ const PassengerStep = ({
 const Row = ({ label, value, truncate }: { label: string; value: string; truncate?: boolean }) => (
   <div className="flex items-start justify-between gap-3">
     <span className="text-muted-foreground shrink-0">{label}</span>
-    <span className={cn("font-medium text-right", truncate && "truncate max-w-[200px]")}>{value}</span>
+    <span className={cn("font-medium text-right min-w-0", truncate && "truncate max-w-[140px] sm:max-w-[200px]")}>{value}</span>
   </div>
 );
 
@@ -863,12 +872,12 @@ const BookingWizard = () => {
     const now = new Date();
     const pickupDateTime = new Date(`${trip.pickupDate}T${trip.pickupTime}`);
     const hoursUntilPickup = (pickupDateTime.getTime() - now.getTime()) / (1000 * 60 * 60);
-    
+
     if (hoursUntilPickup < 12) {
-      toast({ 
-        title: "Booking too soon", 
-        description: "Please book at least 12 hours in advance. Please contact us for urgent bookings via WhatsApp or email.", 
-        variant: "destructive" 
+      toast({
+        title: "Booking too soon",
+        description: "Please book at least 12 hours in advance. Please contact us for urgent bookings via WhatsApp or email.",
+        variant: "destructive"
       });
       return;
     }
@@ -885,7 +894,7 @@ const BookingWizard = () => {
         const errMsg = (error as any)?.context
           ? await ((error as any).context.json?.().then((j: any) => j?.error).catch(() => null))
           : (error as Error | null)?.message;
-        if (error || !data?.distanceKm) {
+        if (error || data?.distanceKm == null) {
           console.warn("Route compute failed", errMsg, data);
           toast({
             title: "Couldn't compute exact distance",
@@ -1056,10 +1065,10 @@ const BookingWizard = () => {
   };
 
   return (
-    <div className="bg-card border border-border rounded-3xl">
+    <div className="bg-card border border-border rounded-3xl overflow-hidden w-full">
       {/* Tabs */}
       <Tabs value={tab} onValueChange={onTabChange}>
-        <TabsList className="grid grid-cols-3 h-auto p-0 bg-secondary/40 rounded-t-3xl rounded-b-none border-b border-border overflow-hidden">
+        <TabsList className="grid grid-cols-2 h-auto p-0 bg-secondary/40 rounded-t-3xl rounded-b-none border-b border-border overflow-hidden">
           {TABS.map(t => (
             <TabsTrigger key={t.value} value={t.value}
               className="h-14 sm:h-16 text-xs sm:text-sm font-semibold rounded-none data-[state=active]:bg-card data-[state=active]:text-accent data-[state=active]:shadow-none border-b-2 border-transparent data-[state=active]:border-accent transition-all flex items-center gap-2">
@@ -1071,7 +1080,7 @@ const BookingWizard = () => {
         </TabsList>
       </Tabs>
 
-      <div className="p-5 sm:p-7">
+      <div className="p-5 sm:p-7 min-w-0 overflow-hidden">
         <div className="mb-1">
           <p className="text-[11px] font-bold uppercase tracking-widest text-accent">
             Step {step} of 3

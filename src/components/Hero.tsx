@@ -5,7 +5,6 @@ import {
   MapPin,
   ShieldCheck,
   Clock3,
-  Star,
   ChevronDown,
 } from "lucide-react";
 import heroImage from "@/assets/hero-cape-town.jpg";
@@ -21,6 +20,9 @@ const Hero = () => {
 
   const imageY = useTransform(scrollYProgress, [0, 1], ["0%", "20%"]);
   const textY = useTransform(scrollYProgress, [0, 1], ["0%", "40%"]);
+
+  const headingClass =
+    "block text-[clamp(2.85rem,12vw,4.45rem)] sm:text-[clamp(3.15rem,6.8vw,5.8rem)] font-black leading-[0.9] tracking-tight";
 
   return (
     <section
@@ -74,8 +76,6 @@ const Hero = () => {
           <div className="absolute inset-x-0 bottom-0 h-1/2 bg-gradient-to-t from-[#0A0A08] via-[#0A0A08]/85 to-transparent" />
         </div>
 
-
-
         {/* ── LEFT: Text panel ── */}
         <div className="relative z-10 flex flex-col justify-center lg:justify-between pb-0 pt-24 sm:pt-28 lg:pt-31 px-5 sm:px-8 lg:px-16 xl:px-20 min-h-screen lg:min-h-0 items-center lg:items-stretch text-center lg:text-left">
           {/* Vertical rule - desktop only */}
@@ -107,7 +107,7 @@ const Hero = () => {
           </motion.div>
 
           {/* Heading */}
-          <motion.h1 style={{ y: textY }} className="mb-5 sm:mb-2 w-full">
+          <motion.h1 style={{ y: textY }} className="mb-4 sm:mb-4 w-full">
             <div className="overflow-hidden mb-1">
               <motion.span
                 initial={{ y: "110%" }}
@@ -117,7 +117,7 @@ const Hero = () => {
                   delay: 0.5,
                   ease: [0.16, 1, 0.3, 1],
                 }}
-                className="block text-[clamp(3.35rem,14vw,5rem)] sm:text-[clamp(3.5rem,8vw,7rem)] font-black leading-[0.88] tracking-tight text-white"
+                className={`${headingClass} text-white`}
                 style={{
                   fontFamily: "'Bebas Neue', sans-serif",
                   letterSpacing: "0.02em",
@@ -136,7 +136,7 @@ const Hero = () => {
                   delay: 0.62,
                   ease: [0.16, 1, 0.3, 1],
                 }}
-                className="block text-[clamp(3.35rem,14vw,5rem)] sm:text-[clamp(3.5rem,8vw,7rem)] font-black leading-[0.88] tracking-tight"
+                className={headingClass}
                 style={{
                   fontFamily: "'Bebas Neue', sans-serif",
                   letterSpacing: "0.02em",
@@ -157,7 +157,7 @@ const Hero = () => {
                   delay: 0.74,
                   ease: [0.16, 1, 0.3, 1],
                 }}
-                className="block text-[clamp(3.35rem,14vw,5rem)] sm:text-[clamp(3.5rem,8vw,7rem)] font-black leading-[0.88] tracking-tight text-white"
+                className={`${headingClass} text-white`}
                 style={{
                   fontFamily: "'Bebas Neue', sans-serif",
                   letterSpacing: "0.02em",
@@ -176,7 +176,7 @@ const Hero = () => {
             className="lg:hidden max-w-[18rem] text-[11px] leading-relaxed tracking-[0.28em] uppercase text-[#F2A51F]/85 mb-5"
             style={{ fontFamily: "'DM Mono', monospace" }}
           >
-            Airport Transfers · Tours · Chauffeur Services
+            Airport Transfers · Shuttle Hire · Private Transport
           </motion.p>
 
           {/* Mobile trust chips */}
@@ -219,8 +219,8 @@ const Hero = () => {
               className="text-[15px] leading-relaxed text-white/50"
               style={{ fontFamily: "'DM Sans', sans-serif" }}
             >
-              Premium airport transfers, chauffeur services, and point-to-point
-              transport across Cape Town.
+              Premium airport transfers, shuttle hire, and private transport
+              across Cape Town.
             </p>
           </motion.div>
 
@@ -257,7 +257,7 @@ const Hero = () => {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.7, delay: 1.25 }}
-            className="flex flex-col sm:flex-row items-stretch sm:items-center justify-center lg:justify-start gap-3 sm:gap-4 mb-7 sm:mb-10 w-full sm:w-auto"
+            className="flex flex-col sm:flex-row items-stretch sm:items-center justify-center lg:justify-start gap-3 sm:gap-4 mb-3 w-full sm:w-auto"
           >
             <Link to="/book" className="w-full sm:w-auto">
               <button
@@ -267,7 +267,10 @@ const Hero = () => {
                   letterSpacing: "0.15em",
                 }}
               >
-                <span className="relative z-10">Reserve Now</span>
+                <span className="relative z-10 lg:hidden">Book a Ride</span>
+                <span className="relative z-10 hidden lg:inline">
+                  Reserve Now
+                </span>
                 <ArrowUpRight className="w-4 h-4 relative z-10 transition-transform duration-300 group-hover:translate-x-1 group-hover:-translate-y-1" />
                 <span className="absolute inset-0 bg-white/10 translate-y-full group-hover:translate-y-0 transition-transform duration-300" />
               </button>
@@ -281,17 +284,28 @@ const Hero = () => {
                   letterSpacing: "0.15em",
                 }}
               >
-                Our Fleet
+                View Fleet
               </button>
             </Link>
           </motion.div>
+
+          {/* Reassurance line */}
+          <motion.p
+            initial={{ opacity: 0, y: 12 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.7, delay: 1.32 }}
+            className="mb-6 text-[10px] uppercase tracking-[0.18em] text-white/35"
+            style={{ fontFamily: "'DM Mono', monospace" }}
+          >
+            No account needed · Secure payment · Instant quote
+          </motion.p>
 
           {/* Mobile mini stats */}
           <motion.div
             initial={{ opacity: 0, y: 18 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.75, delay: 1.38 }}
-            className="lg:hidden grid grid-cols-3 gap-px w-full max-w-sm overflow-hidden rounded-2xl border border-white/10 bg-white/10 backdrop-blur-xl"
+            className="lg:hidden max-[700px]:hidden grid grid-cols-3 gap-px w-full max-w-sm overflow-hidden rounded-2xl border border-white/10 bg-white/10 backdrop-blur-xl"
           >
             {[
               { value: "4.8★", label: "Rating" },
@@ -356,6 +370,32 @@ const Hero = () => {
           </motion.div>
         </div>
       </div>
+
+      {/* Scroll cue */}
+      <motion.div
+        initial={{ opacity: 0, y: -6 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.7, delay: 1.75 }}
+        className="absolute bottom-5 left-1/2 z-30 -translate-x-1/2 hidden sm:flex flex-col items-center gap-2 pointer-events-none"
+      >
+        <span
+          className="text-[9px] uppercase tracking-[0.28em] text-white/30"
+          style={{ fontFamily: "'DM Mono', monospace" }}
+        >
+          Scroll
+        </span>
+        <motion.div
+          animate={{ y: [0, 6, 0] }}
+          transition={{
+            duration: 1.5,
+            repeat: Infinity,
+            ease: "easeInOut",
+          }}
+          className="grid h-8 w-8 place-items-center rounded-full border border-white/10 bg-white/[0.03] backdrop-blur-xl"
+        >
+          <ChevronDown className="h-4 w-4 text-[#F2A51F]/80" />
+        </motion.div>
+      </motion.div>
 
       {/* ── Load fonts ── */}
       <style>{`

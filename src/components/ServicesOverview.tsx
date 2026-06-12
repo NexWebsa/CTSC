@@ -33,20 +33,20 @@ const services = [
       "Direct transfers between any two locations in the Cape Town area.",
     path: "/services/point-to-point",
   },
-  {
-    icon: UsersRound,
-    title: "Employee Transportation",
-    description:
-      "Daily corporate commute solutions to keep your workforce on time.",
-    path: "/services/employee-transportation",
-  },
-  {
-    icon: BusFront,
-    title: "Staff Shuttle Service",
-    description:
-      "Shift-aligned group transport for teams of every size and schedule.",
-    path: "/services/staff-shuttle",
-  },
+  // {
+  //   icon: UsersRound,
+  //   title: "Employee Transportation",
+  //   description:
+  //     "Daily corporate commute solutions to keep your workforce on time.",
+  //   path: "/services/employee-transportation",
+  // },
+  // {
+  //   icon: BusFront,
+  //   title: "Staff Shuttle Service",
+  //   description:
+  //     "Shift-aligned group transport for teams of every size and schedule.",
+  //   path: "/services/staff-shuttle",
+  // },
   {
     icon: MapPinned,
     title: "Custom Trip",

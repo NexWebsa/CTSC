@@ -16,10 +16,10 @@ const navLinks = [
     path: "/services",
     children: [
       { label: "Airport Transfers", path: "/services/airport-transfers" },
-      { label: "Chauffeur Services", path: "/services/chauffeur" },
       { label: "Point-to-Point", path: "/services/point-to-point" },
-      { label: "Employee Transportation", path: "/services/employee-transportation" },
-      { label: "Staff Shuttle Service", path: "/services/staff-shuttle" },
+      { label: "Chauffeur Services", path: "/services/chauffeur" },
+      // { label: "Employee Transportation", path: "/services/employee-transportation" },
+      // { label: "Staff Shuttle Service", path: "/services/staff-shuttle" },
     ],
   },
   { label: "Gallery", path: "/gallery" },
