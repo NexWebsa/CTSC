@@ -62,7 +62,7 @@ export function computeExtrasTotal(
 
 // --- Distance-band pricing table (rate card) --------------------------------
 // Bands are inclusive upper bounds in km.
-const DISTANCE_BANDS = [21, 29, 34, 40, 49, 60, 70, 89, 110] as const;
+const DISTANCE_BANDS = [25, 30, 35, 40, 49, 60, 70, 89, 110] as const;
 
 type VehicleKey =
   | "small_mpv_1_3"
