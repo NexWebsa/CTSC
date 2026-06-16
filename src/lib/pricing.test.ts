@@ -1,5 +1,11 @@
 import { describe, expect, it } from "vitest";
-import { lookupTablePrice, quoteVehicle, type Vehicle } from "./pricing";
+import {
+  getReturnTripRate,
+  isReturnTripVehicle,
+  lookupTablePrice,
+  quoteVehicle,
+  type Vehicle,
+} from "./pricing";
 
 const vehicle = (name: string, slug?: string | null): Vehicle => ({
   id: slug ?? name,
@@ -98,6 +104,66 @@ describe("distance rate-card pricing", () => {
     })).toBe(480);
   });
 
+  it.each([
+    ["Small MPV (Suzuki Ertiga) 1-3 Pax", "small_mpv_1_3", 15.9, 450, 1030],
+    ["Small MPV (Suzuki Ertiga)", "small_mpv_1_5", 16, 550, 1230],
+    ["BMW 5 Series", "bmw_5", 35.9, 700, 1900],
+    ["Toyota Fortuner", "fortuner", 36, 950, 2100],
+    ["Luxury Van (V Class)", "luxury_mercedes_van", 60.9, 1250, 3250],
+    ["Minibus / Quantum Old shape", "minibus_quantum", 61, 1950, 3950],
+    ["Coaster Bus", "coaster", 130, 3000, 7240],
+  ] as const)("prices return-trip %s at %s km", (name, slug, distanceKm, expectedReturnRate, expectedQuote) => {
+    const returnVehicle = vehicle(name, slug);
+
+    expect(getReturnTripRate(returnVehicle, distanceKm)).toBe(expectedReturnRate);
+    expect(quoteVehicle(returnVehicle, {
+      distanceKm,
+      isReturn: true,
+      serviceType: "airport_transfer",
+      extrasTotal: 100,
+    })).toBe(expectedQuote);
+  });
+
+  it("adds the return-trip rate to the normal airport-transfer fare without doubling", () => {
+    const bmw = vehicle("BMW 5 Series", "bmw_5");
+
+    expect(quoteVehicle(bmw, {
+      distanceKm: 20,
+      isReturn: true,
+      serviceType: "airport_transfer",
+      extrasTotal: 100,
+    })).toBe(1750);
+  });
+
+  it("identifies only the vehicles with return-trip rates for Step 2 filtering", () => {
+    expect(isReturnTripVehicle(vehicle("Small MPV (Suzuki Ertiga) 1-3 Pax", "small_mpv_1_3"))).toBe(true);
+    expect(isReturnTripVehicle(vehicle("Small MPV (Suzuki Ertiga)", "small_mpv_1_5"))).toBe(true);
+    expect(isReturnTripVehicle(vehicle("BMW 5 Series", "bmw_5"))).toBe(true);
+    expect(isReturnTripVehicle(vehicle("Toyota Fortuner", "fortuner"))).toBe(true);
+    expect(isReturnTripVehicle(vehicle("Mercedes Vito"))).toBe(true);
+    expect(isReturnTripVehicle(vehicle("Luxury Van (V Class)", "luxury_mercedes_van"))).toBe(true);
+    expect(isReturnTripVehicle(vehicle("Minibus / Quantum Old shape", "minibus_quantum"))).toBe(true);
+    expect(isReturnTripVehicle(vehicle("Coaster Bus", "coaster"))).toBe(true);
+
+    expect(isReturnTripVehicle(vehicle("Mercedes C Class", "mercedes_c"))).toBe(false);
+    expect(isReturnTripVehicle(vehicle("Hyundai Staria", "staria"))).toBe(false);
+    expect(isReturnTripVehicle(vehicle("Mercedes V Class 300", "luxury_v_class_vip"))).toBe(false);
+    expect(isReturnTripVehicle(vehicle("Minibus / Quantum New shape", "minibus_new_quantum"))).toBe(false);
+    expect(getReturnTripRate(vehicle("Minibus / Quantum New shape", "minibus_new_quantum"), 70)).toBeNull();
+  });
+
+  it("falls back to existing pricing above the return-trip distance table", () => {
+    const fortuner = vehicle("Toyota Fortuner", "fortuner");
+
+    expect(getReturnTripRate(fortuner, 130.1)).toBeNull();
+    expect(quoteVehicle(fortuner, {
+      distanceKm: 130.1,
+      isReturn: true,
+      serviceType: "point_to_point",
+      extrasTotal: 0,
+    })).toBeGreaterThan(0);
+  });
+
   it("keeps Shuttle Hire POI pricing for Small MPV 1-5", () => {
     const smallMpv = vehicle("Small MPV (Suzuki Ertiga)", "small_mpv_1_5");
 
@@ -135,6 +201,6 @@ describe("distance rate-card pricing", () => {
       isReturn: true,
       serviceType: "airport_transfer",
       extrasTotal: 100,
-    })).toBe(2200);
+    })).toBe(1900);
   });
 });

@@ -95,6 +95,33 @@ const AIRPORT_TRANSFER_PRICE_OVERRIDES: Partial<Record<VehicleKey, number[]>> = 
   small_mpv_1_5: [580, 650, 720, 800, 900, 1050, 1150, 1350, 1650],
 };
 
+type ReturnTripVehicleKey = Extract<
+  VehicleKey,
+  | "small_mpv_1_3"
+  | "small_mpv_1_5"
+  | "bmw_5"
+  | "fortuner"
+  | "luxury_van"
+  | "minibus_old"
+  | "coaster"
+>;
+
+type ReturnTripRateRow = readonly [number, number, number, number];
+
+// Return-trip-only rates for non-chauffeur bookings. For returns, these are
+// added to the normal airport-transfer fare before extras/extra-stop fees.
+const RETURN_TRIP_DISTANCE_BANDS = [15.9, 35.9, 60.9, 130] as const;
+const RETURN_TRIP_PRICE_TABLE: Record<ReturnTripVehicleKey, ReturnTripRateRow> = {
+  small_mpv_1_3: [450, 500, 650, 850],
+  small_mpv_1_5: [500, 550, 750, 1000],
+  bmw_5: [650, 700, 850, 1250],
+  fortuner: [700, 750, 950, 1450],
+  // Existing Supabase data uses luxury_mercedes_van for the Mercedes Vito/van category.
+  luxury_van: [800, 850, 1250, 1500],
+  minibus_old: [850, 1000, 1500, 1950],
+  coaster: [2400, 2500, 2850, 3000],
+};
+
 function matchVehicleKey(name: string, slug?: string | null): VehicleKey | null {
   const s = (slug || "").toLowerCase();
   if (s === "small_mpv_1_3") return "small_mpv_1_3";
@@ -137,6 +164,46 @@ function matchVehicleKey(name: string, slug?: string | null): VehicleKey | null 
   return null;
 }
 
+function normalizeVehicleText(value: string | null | undefined): string {
+  return (value || "").toLowerCase().replace(/[^a-z0-9]+/g, " ").trim();
+}
+
+function matchReturnTripVehicleKey(
+  vehicle: Pick<Vehicle, "name" | "slug">,
+): ReturnTripVehicleKey | null {
+  const s = (vehicle.slug || "").toLowerCase().trim();
+
+  if (s === "small_mpv_1_3") return "small_mpv_1_3";
+  if (s === "small_mpv_1_5") return "small_mpv_1_5";
+  if (s === "bmw_5") return "bmw_5";
+  if (s === "fortuner") return "fortuner";
+  if (s === "luxury_mercedes_van" || s === "mercedes_vito") return "luxury_van";
+  if (s === "minibus_quantum") return "minibus_old";
+  if (s === "minibus_new_quantum") return null;
+  if (s === "coaster") return "coaster";
+  if (s === "mercedes_c" || s === "staria" || s === "luxury_v_class_vip") return null;
+
+  const n = normalizeVehicleText(vehicle.name);
+  if (!n) return null;
+
+  if (n.includes("coaster")) return "coaster";
+  if (n.includes("fortuner")) return "fortuner";
+  if (n.includes("bmw")) return "bmw_5";
+  if ((n.includes("suzuki") || n.includes("mpv")) && n.includes("1") && n.includes("3")) {
+    return "small_mpv_1_3";
+  }
+  if (n.includes("suzuki") || n.includes("mpv")) return "small_mpv_1_5";
+  if (n.includes("minibus") || n.includes("qtm") || n.includes("quantum")) {
+    return n.includes("new") ? null : "minibus_old";
+  }
+  if (n.includes("vip") || n.includes("class 300")) return null;
+  if ((n.includes("mercedes") && n.includes("vito")) || n.includes("luxury van")) {
+    return "luxury_van";
+  }
+
+  return null;
+}
+
 function lookupPriceFromRow(row: number[], distanceKm: number): number {
   const d = Math.max(0, distanceKm);
   if (d <= 0) return row[0];
@@ -156,6 +223,32 @@ export function lookupTablePrice(vehicleName: string, distanceKm: number, vehicl
   return lookupPriceFromRow(PRICE_TABLE[key], distanceKm);
 }
 
+function lookupReturnTripPriceFromRow(row: ReturnTripRateRow, distanceKm: number): number | null {
+  const d = Number.isFinite(distanceKm) ? Math.max(0, distanceKm) : 0;
+  if (d > RETURN_TRIP_DISTANCE_BANDS[RETURN_TRIP_DISTANCE_BANDS.length - 1]) {
+    return null;
+  }
+
+  for (let i = 0; i < RETURN_TRIP_DISTANCE_BANDS.length; i++) {
+    if (d <= RETURN_TRIP_DISTANCE_BANDS[i]) return row[i];
+  }
+
+  return row[row.length - 1];
+}
+
+export function isReturnTripVehicle(vehicle: Pick<Vehicle, "name" | "slug">): boolean {
+  return matchReturnTripVehicleKey(vehicle) != null;
+}
+
+export function getReturnTripRate(
+  vehicle: Pick<Vehicle, "name" | "slug">,
+  distanceKm: number,
+): number | null {
+  const key = matchReturnTripVehicleKey(vehicle);
+  if (!key) return null;
+  return lookupReturnTripPriceFromRow(RETURN_TRIP_PRICE_TABLE[key], distanceKm);
+}
+
 function lookupAirportTransferPrice(vehicleName: string, distanceKm: number, vehicleSlug?: string | null): number | null {
   const key = matchVehicleKey(vehicleName, vehicleSlug);
   if (!key) return null;
@@ -173,6 +266,20 @@ export function quoteVehicle(vehicle: Vehicle, input: QuoteInput): number {
       let total = perHour * input.hours;
       total += input.extrasTotal ?? 0;
       return roundUp(Math.max(MIN_FARE, total));
+    }
+  }
+
+  if (input.serviceType !== "chauffeur" && input.isReturn) {
+    const returnTripRate = getReturnTripRate(vehicle, input.distanceKm);
+    if (returnTripRate != null) {
+      const airportTransferRate = lookupAirportTransferPrice(
+        vehicle.name,
+        input.distanceKm,
+        vehicle.slug,
+      );
+      if (airportTransferRate != null) {
+        return roundUp(airportTransferRate + returnTripRate + (input.extrasTotal ?? 0));
+      }
     }
   }
 
