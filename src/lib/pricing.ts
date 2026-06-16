@@ -283,8 +283,8 @@ export function quoteVehicle(vehicle: Vehicle, input: QuoteInput): number {
     }
   }
 
-  // Distance-based pricing — use the rate-card table whenever vehicle maps
-  const tablePrice = input.serviceType === "airport_transfer"
+  // Distance-based pricing: City Transfers and Airport Transfers share rates.
+  const tablePrice = input.serviceType !== "chauffeur"
     ? lookupAirportTransferPrice(vehicle.name, input.distanceKm, vehicle.slug)
     : lookupTablePrice(vehicle.name, input.distanceKm, vehicle.slug);
   if (tablePrice != null) {
@@ -297,7 +297,7 @@ export function quoteVehicle(vehicle: Vehicle, input: QuoteInput): number {
   // Fallback for any vehicle not in the rate card
   const perKm = vehicle.price_per_km ?? DEFAULT_PER_KM;
   let total = BASE_FARE + perKm * input.distanceKm;
-  if (input.serviceType === "airport_transfer") total += AIRPORT_SURCHARGE;
+  if (input.serviceType !== "chauffeur") total += AIRPORT_SURCHARGE;
   if (input.isReturn) total *= RETURN_MULTIPLIER;
   total += input.extrasTotal ?? 0;
 

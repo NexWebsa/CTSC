@@ -93,7 +93,7 @@ describe("distance rate-card pricing", () => {
     })).toBe(expected);
   });
 
-  it("keeps Small MPV non-airport distance pricing on the existing table", () => {
+  it("prices Small MPV point-to-point transfers on the airport/city rate card", () => {
     const smallMpv = vehicle("Small MPV (Suzuki Ertiga)", "small_mpv_1_5");
 
     expect(quoteVehicle(smallMpv, {
@@ -101,7 +101,18 @@ describe("distance rate-card pricing", () => {
       isReturn: false,
       serviceType: "point_to_point",
       extrasTotal: 0,
-    })).toBe(480);
+    })).toBe(580);
+  });
+
+  it("prices return City Transfers on the airport/city rate card", () => {
+    const smallMpv = vehicle("Small MPV (Suzuki Ertiga)", "small_mpv_1_5");
+
+    expect(quoteVehicle(smallMpv, {
+      distanceKm: 20,
+      isReturn: true,
+      serviceType: "point_to_point",
+      extrasTotal: 0,
+    })).toBe(1130);
   });
 
   it.each([

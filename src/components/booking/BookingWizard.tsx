@@ -28,6 +28,7 @@ import {
 
 type ServiceTab = "airport_transfer" | "point_to_point" | "chauffeur";
 type Direction = "one_way" | "return";
+type AirportDirection = "to_airport" | "from_airport";
 
 interface TripData {
   serviceType: ServiceTab;
@@ -54,7 +55,8 @@ interface TripData {
   extras: Record<string, number>;
   extraStop: boolean;
   extraStopLocation: string;
-  airportDirection: "to_airport" | "from_airport";
+  airportTransfer: boolean;
+  airportDirection: AirportDirection;
 }
 
 interface PassengerData {
@@ -97,8 +99,16 @@ const initialTrip = (s: ServiceTab): TripData => ({
   extras: {},
   extraStop: false,
   extraStopLocation: "",
+  airportTransfer: false,
   airportDirection: "to_airport",
 });
+
+const getEffectiveServiceType = (
+  trip: Pick<TripData, "serviceType" | "airportTransfer">,
+): ServiceTab =>
+  trip.serviceType === "airport_transfer" && !trip.airportTransfer
+    ? "point_to_point"
+    : trip.serviceType;
 
 // ─────────────────────────────────────────────────────────────
 // Number select
@@ -499,27 +509,6 @@ const TripDetailsStep = ({
   const update = <K extends keyof TripData>(k: K, v: TripData[K]) => {
     const next = { ...trip, [k]: v };
 
-    if (k === "direction" && v === "return") {
-      next.returnPickup = trip.returnPickup || trip.dropoff;
-      next.returnDropoff = trip.returnDropoff || trip.pickup;
-    }
-
-    if (
-      k === "pickup" &&
-      trip.direction === "return" &&
-      (!trip.returnDropoff || trip.returnDropoff === trip.pickup)
-    ) {
-      next.returnDropoff = v as string;
-    }
-
-    if (
-      k === "dropoff" &&
-      trip.direction === "return" &&
-      (!trip.returnPickup || trip.returnPickup === trip.dropoff)
-    ) {
-      next.returnPickup = v as string;
-    }
-
     if (k === "pickupDate" && next.returnDate && next.returnDate < (v as string)) {
       next.returnDate = "";
       next.returnTime = "";
@@ -896,40 +885,75 @@ const TripDetailsStep = ({
       {trip.serviceType === "airport_transfer" && (
         <div className="bg-secondary/30 rounded-2xl p-4 border border-border/60">
           <p className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider mb-2">
-            Airport direction
+            Airport transfer
           </p>
 
           <div className="flex gap-6">
-            {(["to_airport", "from_airport"] as Array<
-              "to_airport" | "from_airport"
-            >).map((d) => (
+            {[
+              { value: true, label: "Yes" },
+              { value: false, label: "No" },
+            ].map((option) => (
               <button
-                key={d}
+                key={option.label}
                 type="button"
-                onClick={() => update("airportDirection", d)}
+                onClick={() => update("airportTransfer", option.value)}
                 className="flex items-center gap-2.5 text-sm font-medium py-1.5"
               >
                 <span
                   className={cn(
                     "w-4 h-4 rounded-full border-2 grid place-items-center transition-all",
-                    trip.airportDirection === d
+                    trip.airportTransfer === option.value
                       ? "border-accent"
                       : "border-muted-foreground/40"
                   )}
                 >
-                  {trip.airportDirection === d && (
+                  {trip.airportTransfer === option.value && (
                     <span className="w-2 h-2 rounded-full bg-accent" />
                   )}
                 </span>
 
-                <span className="text-foreground">
-                  {d === "to_airport"
-                    ? "Traveling TO airport"
-                    : "Traveling FROM airport"}
-                </span>
+                <span className="text-foreground">{option.label}</span>
               </button>
             ))}
           </div>
+
+          {trip.airportTransfer && (
+            <div className="mt-4 pt-4 border-t border-border/60">
+              <p className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider mb-2">
+                Airport direction
+              </p>
+
+              <div className="flex flex-col sm:flex-row gap-3 sm:gap-6">
+                {(["to_airport", "from_airport"] as AirportDirection[]).map((d) => (
+                  <button
+                    key={d}
+                    type="button"
+                    onClick={() => update("airportDirection", d)}
+                    className="flex items-center gap-2.5 text-sm font-medium py-1.5"
+                  >
+                    <span
+                      className={cn(
+                        "w-4 h-4 rounded-full border-2 grid place-items-center transition-all",
+                        trip.airportDirection === d
+                          ? "border-accent"
+                          : "border-muted-foreground/40"
+                      )}
+                    >
+                      {trip.airportDirection === d && (
+                        <span className="w-2 h-2 rounded-full bg-accent" />
+                      )}
+                    </span>
+
+                    <span className="text-foreground">
+                      {d === "to_airport"
+                        ? "Traveling TO airport"
+                        : "Traveling FROM airport"}
+                    </span>
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
         </div>
       )}
 
@@ -982,6 +1006,7 @@ const VehicleSelectStep = ({
   loading: boolean;
   isGuest: boolean;
 }) => {
+  const effectiveServiceType = getEffectiveServiceType(trip);
   const vehicleOptions =
     trip.direction === "return" && trip.serviceType !== "chauffeur"
       ? vehicles.filter(isReturnTripVehicle)
@@ -1104,7 +1129,7 @@ const VehicleSelectStep = ({
               distanceKm: trip.distanceKm ?? 0,
               durationMinutes: trip.durationMinutes ?? 0,
               isReturn: trip.direction === "return",
-              serviceType: trip.serviceType,
+              serviceType: effectiveServiceType,
               hours: trip.hours,
               extrasTotal: computeExtrasTotal(trip.extras, trip.extraStop),
               poiPrice,
@@ -1244,7 +1269,8 @@ const PassengerStep = ({
   const update = <K extends keyof PassengerData>(k: K, v: PassengerData[K]) =>
     setPassenger({ ...passenger, [k]: v });
 
-  const isAirport = trip.serviceType === "airport_transfer";
+  const isAirport =
+    trip.serviceType === "airport_transfer" && trip.airportTransfer;
 
   return (
     <div className="grid lg:grid-cols-[1fr_360px] gap-6">
@@ -1456,6 +1482,19 @@ const PassengerStep = ({
 
           {trip.serviceType !== "chauffeur" && trip.distanceKm != null && (
             <Row label="Distance" value={`${trip.distanceKm.toFixed(1)} km`} />
+          )}
+
+          {trip.serviceType === "airport_transfer" && (
+            <Row
+              label="Airport"
+              value={
+                trip.airportTransfer
+                  ? trip.airportDirection === "to_airport"
+                    ? "To airport"
+                    : "From airport"
+                  : "No"
+              }
+            />
           )}
 
           <Row label="Passengers" value={String(trip.passengers)} />
@@ -1768,18 +1807,21 @@ const BookingWizard = () => {
   );
 
   const totalPrice = useMemo(
-    () =>
-      selectedVehicle
+    () => {
+      const effectiveServiceType = getEffectiveServiceType(trip);
+
+      return selectedVehicle
         ? quoteVehicle(selectedVehicle, {
-          distanceKm: trip.distanceKm ?? 0,
-          durationMinutes: trip.durationMinutes ?? 0,
-          isReturn: trip.direction === "return",
-          serviceType: trip.serviceType,
-          hours: trip.hours,
-          extrasTotal,
-          poiPrice,
-        })
-        : 0,
+            distanceKm: trip.distanceKm ?? 0,
+            durationMinutes: trip.durationMinutes ?? 0,
+            isReturn: trip.direction === "return",
+            serviceType: effectiveServiceType,
+            hours: trip.hours,
+            extrasTotal,
+            poiPrice,
+          })
+        : 0;
+    },
     [selectedVehicle, trip, extrasTotal, poiPrice]
   );
 
@@ -1795,6 +1837,7 @@ const BookingWizard = () => {
 
     if (
       trip.serviceType === "airport_transfer" &&
+      trip.airportTransfer &&
       trip.airportDirection === "from_airport" &&
       !passenger.flightNumber.trim()
     ) {
@@ -1821,17 +1864,23 @@ const BookingWizard = () => {
 
     try {
       const noteParts: string[] = [];
-
-      noteParts.push(
-        `Service: ${trip.serviceType === "chauffeur"
+      const effectiveServiceType = getEffectiveServiceType(trip);
+      const serviceLabel =
+        trip.serviceType === "chauffeur"
           ? "Shuttle Hire"
-          : trip.serviceType === "point_to_point"
-            ? "Staff Service"
-            : "Airport Transfer"
-        }`
-      );
+          : trip.serviceType === "airport_transfer" && trip.airportTransfer
+            ? "Airport Transfer"
+            : trip.serviceType === "airport_transfer"
+              ? "City Transfer"
+              : "Staff Service";
+
+      noteParts.push(`Service: ${serviceLabel}`);
 
       if (trip.serviceType === "airport_transfer") {
+        noteParts.push(`Airport transfer: ${trip.airportTransfer ? "Yes" : "No"}`);
+      }
+
+      if (trip.serviceType === "airport_transfer" && trip.airportTransfer) {
         noteParts.push(
           `Airport: ${trip.airportDirection === "to_airport"
             ? "Flying TO airport"
@@ -1840,7 +1889,7 @@ const BookingWizard = () => {
         );
       }
 
-      if (passenger.flightNumber) {
+      if (trip.airportTransfer && passenger.flightNumber) {
         noteParts.push(`Flight: ${passenger.flightNumber}`);
       }
 
@@ -1904,7 +1953,7 @@ const BookingWizard = () => {
         guest_email: isGuest ? passenger.email : null,
         guest_phone: isGuest ? passenger.phone : null,
         vehicle_id: selectedVehicle.id,
-        service_type: trip.serviceType,
+        service_type: effectiveServiceType,
         booking_type: trip.serviceType === "chauffeur" ? "hourly" : "transfer",
         pickup_location: trip.pickup,
         dropoff_location: trip.dropoff,
@@ -1924,7 +1973,7 @@ const BookingWizard = () => {
         oversize_luggage: trip.oversizeLuggage,
         distance_km: trip.distanceKm,
         duration_minutes: trip.durationMinutes,
-        flight_number: passenger.flightNumber || null,
+        flight_number: trip.airportTransfer ? passenger.flightNumber || null : null,
         status: "pending",
         payment_status: "unpaid",
         price_estimate: totalPrice,
@@ -2034,7 +2083,7 @@ const BookingWizard = () => {
             <TabsTrigger
               key={t.value}
               value={t.value}
-              className="h-14 sm:h-16 text-xs sm:text-sm font-semibold rounded-none data-[state=active]:bg-card data-[state=active]:text-accent data-[state=active]:shadow-none border-b-2 border-transparent data-[state=active]:border-accent transition-all flex items-center gap-2"
+              className="h-14 sm:h-16 text-xs sm:text-sm font-semibold rounded-none data-[state=inactive]:bg-white/70 data-[state=inactive]:text-slate-700 data-[state=inactive]:hover:bg-white/90 data-[state=inactive]:hover:text-slate-950 data-[state=active]:bg-card data-[state=active]:text-accent data-[state=active]:shadow-none border-b-2 border-transparent data-[state=active]:border-accent transition-all flex items-center gap-2"
             >
               <t.icon className="w-4 h-4" />
               <span className="hidden sm:inline">{t.label}</span>
