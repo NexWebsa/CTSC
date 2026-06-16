@@ -128,14 +128,14 @@ const NumberSelect = ({
   label: string;
   icon?: typeof Users;
 }) => (
-  <div className="space-y-1.5">
-    <Label className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider flex items-center gap-1.5">
+  <div className="min-w-0 space-y-1.5">
+    <Label className="flex min-w-0 items-center gap-1.5 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
       {Icon && <Icon className="w-3.5 h-3.5" />}
       {label} *
     </Label>
 
     <Select value={String(value)} onValueChange={(v) => onChange(parseInt(v))}>
-      <SelectTrigger className="h-11 text-base font-medium">
+      <SelectTrigger className="h-11 min-w-0 text-base font-medium">
         <SelectValue />
       </SelectTrigger>
 
@@ -323,6 +323,20 @@ export interface PoiOption {
   vehicle_prices: Record<string, number>;
 }
 
+type PoiRow = {
+  name: string | null;
+  category: string | null;
+  vehicle_prices: Record<string, number> | null;
+};
+
+type FunctionErrorContext = {
+  json?: () => Promise<{ error?: string } | null>;
+};
+
+type FunctionInvokeError = Error & {
+  context?: FunctionErrorContext;
+};
+
 const usePointsOfInterest = () => {
   const [points, setPoints] = useState<PoiOption[]>([]);
 
@@ -350,10 +364,10 @@ const usePointsOfInterest = () => {
       }
 
       setPoints([
-        ...data.map((p: any) => ({
-          name: p.name as string,
-          category: (p.category as string) ?? null,
-          vehicle_prices: (p.vehicle_prices as Record<string, number>) ?? {},
+        ...data.map((p: PoiRow) => ({
+          name: p.name ?? "",
+          category: p.category ?? null,
+          vehicle_prices: p.vehicle_prices ?? {},
         })),
         custom,
       ]);
@@ -1725,12 +1739,13 @@ const BookingWizard = () => {
           },
         });
 
-        const errMsg = (error as any)?.context
-          ? await (error as any).context
+        const functionError = error as FunctionInvokeError | null;
+        const errMsg = functionError?.context
+          ? await functionError.context
             .json?.()
-            .then((j: any) => j?.error)
+            .then((j) => j?.error)
             .catch(() => null)
-          : (error as Error | null)?.message;
+          : functionError?.message;
 
         if (error || data?.distanceKm == null) {
           console.warn("Route compute failed", errMsg, data);
@@ -2074,6 +2089,8 @@ const BookingWizard = () => {
         rounded-3xl
         overflow-hidden
         w-full
+        max-w-full
+        min-w-0
         shadow-[0_20px_60px_rgba(0,0,0,0.45)]
       "
     >
@@ -2093,7 +2110,7 @@ const BookingWizard = () => {
         </TabsList>
       </Tabs>
 
-      <div className="p-5 sm:p-7 min-w-0 overflow-hidden bg-white">
+      <div className="min-w-0 overflow-hidden bg-white p-4 sm:p-7">
         <div className="mb-1">
           <p className="text-[11px] font-bold uppercase tracking-widest text-accent">
             Step {step} of 3
@@ -2128,6 +2145,7 @@ const BookingWizard = () => {
             animate={{ opacity: 1, x: 0 }}
             exit={{ opacity: 0, x: -20 }}
             transition={{ duration: 0.25 }}
+            className="min-w-0 max-w-full"
           >
             {step === 1 && (
               <TripDetailsStep

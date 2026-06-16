@@ -82,14 +82,22 @@ export const AddressAutocomplete = ({
     if (!inputRef.current || typeof window === "undefined") return;
 
     const r = inputRef.current.getBoundingClientRect();
+    const visualViewport = window.visualViewport;
+    const viewportLeft = visualViewport?.offsetLeft ?? 0;
+    const viewportWidth = visualViewport?.width ?? window.innerWidth;
     const padding = 12;
-    const availableWidth = window.innerWidth - padding * 2;
+    const availableWidth = Math.max(0, viewportWidth - padding * 2);
+    const width = Math.min(r.width, availableWidth);
+    const minLeft = viewportLeft + padding;
+    const maxLeft = viewportLeft + viewportWidth - width - padding;
 
     setDropdownStyle({
       position: "fixed",
       top: r.bottom + 6,
-      left: Math.max(padding, Math.min(r.left, window.innerWidth - r.width - padding)),
-      width: Math.min(r.width, availableWidth),
+      left: Math.min(Math.max(r.left, minLeft), Math.max(minLeft, maxLeft)),
+      width,
+      maxWidth: availableWidth,
+      boxSizing: "border-box",
       zIndex: 99999,
     });
   };
@@ -119,10 +127,14 @@ export const AddressAutocomplete = ({
 
     window.addEventListener("scroll", update, true);
     window.addEventListener("resize", update);
+    window.visualViewport?.addEventListener("scroll", update);
+    window.visualViewport?.addEventListener("resize", update);
 
     return () => {
       window.removeEventListener("scroll", update, true);
       window.removeEventListener("resize", update);
+      window.visualViewport?.removeEventListener("scroll", update);
+      window.visualViewport?.removeEventListener("resize", update);
     };
   }, [open]);
 
@@ -192,6 +204,7 @@ export const AddressAutocomplete = ({
     const full = s.secondary ? `${s.text}, ${s.secondary}` : s.text;
 
     onChange(full);
+    inputRef.current?.blur();
     setOpen(false);
     setSuggestions([]);
     tokenRef.current = null;
@@ -203,8 +216,9 @@ export const AddressAutocomplete = ({
           <div
             ref={dropdownRef}
             style={dropdownStyle}
-            className="bg-card border border-border rounded-xl shadow-xl shadow-black/10 overflow-hidden max-h-[280px] overflow-y-auto"
+            className="max-w-[calc(100vw-1.5rem)] overflow-hidden rounded-xl border border-border bg-card shadow-xl shadow-black/10"
           >
+            <div className="max-h-[280px] overflow-y-auto overscroll-contain">
             {suggestions.map((s, i) => (
               <button
                 key={s.placeId + i}
@@ -214,15 +228,17 @@ export const AddressAutocomplete = ({
                   pick(s);
                 }}
                 onMouseEnter={() => setHighlight(i)}
-                className={`flex items-start gap-2.5 w-full text-left px-3 py-2.5 text-sm transition-colors ${
+                className={`flex w-full items-start gap-2.5 px-3 py-2.5 text-left text-sm transition-colors ${
                   i === highlight ? "bg-accent/10" : "hover:bg-accent/5"
                 }`}
               >
                 <MapPin className="mt-0.5 shrink-0 w-4 h-4 text-muted-foreground" />
-                <div className="min-w-0">
-                  <div className="font-medium text-foreground">{s.text}</div>
+                <div className="min-w-0 flex-1">
+                  <div className="break-words font-medium leading-snug text-foreground">
+                    {s.text}
+                  </div>
                   {s.secondary && (
-                    <div className="text-xs text-muted-foreground truncate">
+                    <div className="truncate text-xs text-muted-foreground">
                       {s.secondary}
                     </div>
                   )}
@@ -235,13 +251,14 @@ export const AddressAutocomplete = ({
                 Powered by Google
               </span>
             </div>
+            </div>
           </div>,
           document.body
         )
       : null;
 
   return (
-    <div ref={wrapRef} className="relative">
+    <div ref={wrapRef} className="relative w-full min-w-0">
       <input
         ref={inputRef}
         type="text"
@@ -250,7 +267,7 @@ export const AddressAutocomplete = ({
         onChange={(e) => handleChange(e.target.value)}
         onFocus={() => {
           updateDropdownPos();
-          suggestions.length > 0 && setOpen(true);
+          if (suggestions.length > 0) setOpen(true);
         }}
         onKeyDown={(e) => {
           if (!open) return;
@@ -268,7 +285,7 @@ export const AddressAutocomplete = ({
             setOpen(false);
           }
         }}
-        className={`flex h-11 w-full rounded-lg border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/30 focus-visible:border-accent transition-all ${className}`}
+        className={`block h-11 w-full min-w-0 max-w-full rounded-lg border border-input bg-background px-3 py-2 text-base ring-offset-background transition-all placeholder:text-muted-foreground focus-visible:border-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/30 sm:text-sm ${className}`}
       />
 
       {dropdown}

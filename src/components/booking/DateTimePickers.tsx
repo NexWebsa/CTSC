@@ -94,24 +94,24 @@ export const DatePicker = ({
     : "";
 
   return (
-    <div ref={ref} className="relative">
+    <div ref={ref} className="relative w-full min-w-0">
       <button
         type="button"
         onClick={() => setOpen((o) => !o)}
         className={cn(
-          "w-full h-11 px-3 rounded-lg border text-sm flex items-center justify-between gap-2 bg-background hover:border-accent/50",
+          "flex h-11 w-full min-w-0 max-w-full items-center justify-between gap-2 rounded-lg border bg-background px-3 text-base hover:border-accent/50 sm:text-sm",
           open ? "border-accent ring-2 ring-accent/20" : "border-input",
           !display && "text-muted-foreground"
         )}
       >
-        <span className="flex items-center gap-2">
-          <Calendar className="w-4 h-4 text-accent" />
-          {display || placeholder}
+        <span className="flex min-w-0 items-center gap-2">
+          <Calendar className="h-4 w-4 shrink-0 text-accent" />
+          <span className="truncate">{display || placeholder}</span>
         </span>
       </button>
 
       {open && (
-        <div className="absolute z-50 mt-2 left-0 w-72 bg-card border border-border rounded-2xl shadow-xl overflow-hidden">
+        <div className="absolute left-1/2 z-50 mt-2 w-[min(18rem,calc(100vw-2rem))] max-w-[calc(100vw-2rem)] -translate-x-1/2 overflow-hidden rounded-2xl border border-border bg-card shadow-xl sm:left-0 sm:translate-x-0">
           <div className="flex items-center justify-between px-4 py-3 border-b border-border">
             <button
               type="button"
@@ -322,24 +322,24 @@ export const TimePicker = ({
   const minuteHour = h ?? firstAvailableHour;
 
   return (
-    <div ref={ref} className="relative">
+    <div ref={ref} className="relative w-full min-w-0">
       <button
         type="button"
         onClick={() => setOpen((o) => !o)}
         className={cn(
-          "w-full h-11 px-3 rounded-lg border text-sm flex items-center justify-between gap-2 bg-background hover:border-accent/50",
+          "flex h-11 w-full min-w-0 max-w-full items-center justify-between gap-2 rounded-lg border bg-background px-3 text-base hover:border-accent/50 sm:text-sm",
           open ? "border-accent ring-2 ring-accent/20" : "border-input",
           !display && "text-muted-foreground"
         )}
       >
-        <span className="flex items-center gap-2">
-          <Clock className="w-4 h-4 text-accent" />
-          {display || placeholder}
+        <span className="flex min-w-0 items-center gap-2">
+          <Clock className="h-4 w-4 shrink-0 text-accent" />
+          <span className="truncate">{display || placeholder}</span>
         </span>
       </button>
 
       {open && (
-        <div className="absolute z-50 mt-2 left-0 bg-card border border-border rounded-2xl shadow-xl w-64 overflow-hidden">
+        <div className="absolute left-1/2 z-50 mt-2 w-[min(16rem,calc(100vw-2rem))] max-w-[calc(100vw-2rem)] -translate-x-1/2 overflow-hidden rounded-2xl border border-border bg-card shadow-xl sm:left-0 sm:translate-x-0">
           <div className="flex">
             <div className="flex-1 border-r border-border">
               <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground text-center py-2 border-b border-border/50">

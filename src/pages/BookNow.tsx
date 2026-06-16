@@ -42,8 +42,8 @@ const BookNow = () => {
         {/* Subtle texture/vignette */}
         <div className="absolute inset-0 -z-10 bg-[radial-gradient(circle_at_center,transparent_0%,rgba(0,0,0,0.35)_75%)]" />
 
-        <div className="relative z-10">
-          <div className="container mx-auto w-full max-w-6xl px-4 sm:px-6 lg:px-8">
+        <div className="relative z-10 min-w-0 max-w-full">
+          <div className="container mx-auto w-full min-w-0 max-w-6xl px-4 sm:px-6 lg:px-8">
             <motion.div
               initial={{ opacity: 0, y: 18 }}
               animate={{ opacity: 1, y: 0 }}
@@ -70,7 +70,7 @@ const BookNow = () => {
               initial={{ opacity: 0, y: 22 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.12, duration: 0.45, ease: "easeOut" }}
-              className="mx-auto w-full"
+              className="mx-auto w-full min-w-0 max-w-full"
             >
               <BookingWizard />
             </motion.div>
