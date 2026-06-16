@@ -43,6 +43,8 @@ interface TripData {
   pickupDate: string;
   pickupTime: string;
   endTime: string;
+  returnPickup: string;
+  returnDropoff: string;
   returnDate: string;
   returnTime: string;
   hours: number;
@@ -74,7 +76,7 @@ const initialTrip = (s: ServiceTab): TripData => ({
   serviceType: s, direction: "one_way", trailer: false, oversizeLuggage: false,
   passengers: 2, babySeats: 0, luggageCheckin: 0, luggageCarry: 0,
   pickup: "", dropoff: "", pickupDate: "", pickupTime: "",
-  endTime: "", returnDate: "", returnTime: "", hours: 4,
+  endTime: "", returnPickup: "", returnDropoff: "", returnDate: "", returnTime: "", hours: 4,
   pointsOfInterest: "",
   distanceKm: null, durationMinutes: null,
   extras: {}, extraStop: false, extraStopLocation: "",
@@ -353,7 +355,24 @@ const TripDetailsStep = ({ trip, setTrip, onNext, computing }: {
   trip: TripData; setTrip: (t: TripData) => void; onNext: () => void; computing: boolean;
 }) => {
   const isChauffeur = trip.serviceType === "chauffeur";
-  const update = <K extends keyof TripData>(k: K, v: TripData[K]) => setTrip({ ...trip, [k]: v });
+  const update = <K extends keyof TripData>(k: K, v: TripData[K]) => {
+    const next = { ...trip, [k]: v };
+
+    if (k === "direction" && v === "return") {
+      next.returnPickup = trip.returnPickup || trip.dropoff;
+      next.returnDropoff = trip.returnDropoff || trip.pickup;
+    }
+
+    if (k === "pickup" && trip.direction === "return" && (!trip.returnDropoff || trip.returnDropoff === trip.pickup)) {
+      next.returnDropoff = v as string;
+    }
+
+    if (k === "dropoff" && trip.direction === "return" && (!trip.returnPickup || trip.returnPickup === trip.dropoff)) {
+      next.returnPickup = v as string;
+    }
+
+    setTrip(next);
+  };
   const pointsOfInterest = usePointsOfInterest();
 
   if (isChauffeur) {
@@ -513,14 +532,30 @@ const TripDetailsStep = ({ trip, setTrip, onNext, computing }: {
       </div>
 
       {trip.direction === "return" && !isChauffeur && (
-        <div className="grid sm:grid-cols-2 gap-4 p-4 rounded-2xl bg-accent/5 border border-accent/20">
-          <div className="space-y-1.5">
-            <Label className="text-[11px] font-semibold text-accent uppercase tracking-wider">Return date *</Label>
-            <DatePicker value={trip.returnDate} onChange={(v) => update("returnDate", v)} minDate={trip.pickupDate ? new Date(trip.pickupDate) : undefined} />
+        <div className="space-y-4 p-4 rounded-2xl bg-accent/5 border border-accent/20">
+          <div className="grid sm:grid-cols-2 gap-4">
+            <div className="space-y-1.5">
+              <Label className="text-[11px] font-semibold text-accent uppercase tracking-wider flex items-center gap-1.5">
+                <MapPin className="w-3.5 h-3.5" /> Return pickup *
+              </Label>
+              <AddressAutocomplete value={trip.returnPickup} onChange={(v) => update("returnPickup", v)} placeholder="Return pickup address..." />
+            </div>
+            <div className="space-y-1.5">
+              <Label className="text-[11px] font-semibold text-accent uppercase tracking-wider flex items-center gap-1.5">
+                <MapPin className="w-3.5 h-3.5" /> Return dropoff *
+              </Label>
+              <AddressAutocomplete value={trip.returnDropoff} onChange={(v) => update("returnDropoff", v)} placeholder="Return dropoff address..." />
+            </div>
           </div>
-          <div className="space-y-1.5">
-            <Label className="text-[11px] font-semibold text-accent uppercase tracking-wider">Return time *</Label>
-            <TimePicker value={trip.returnTime} onChange={(v) => update("returnTime", v)} />
+          <div className="grid sm:grid-cols-2 gap-4">
+            <div className="space-y-1.5">
+              <Label className="text-[11px] font-semibold text-accent uppercase tracking-wider">Return date *</Label>
+              <DatePicker value={trip.returnDate} onChange={(v) => update("returnDate", v)} minDate={trip.pickupDate ? new Date(trip.pickupDate) : undefined} />
+            </div>
+            <div className="space-y-1.5">
+              <Label className="text-[11px] font-semibold text-accent uppercase tracking-wider">Return time *</Label>
+              <TimePicker value={trip.returnTime} onChange={(v) => update("returnTime", v)} />
+            </div>
           </div>
         </div>
       )}
@@ -585,6 +620,18 @@ const VehicleSelectStep = ({ trip, vehicles, selectedPoi, selected, onSelect, on
           {trip.serviceType === "chauffeur" && trip.endTime ? `–${trip.endTime}` : ""}
         </p>
       </div>
+      {trip.serviceType !== "chauffeur" && trip.direction === "return" && (
+        <>
+          <div className="space-y-0.5 min-w-0">
+            <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">Return from</p>
+            <p className="font-medium text-xs sm:text-sm break-words leading-snug">{trip.returnPickup || trip.dropoff}</p>
+          </div>
+          <div className="space-y-0.5 min-w-0">
+            <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">Return to</p>
+            <p className="font-medium text-xs sm:text-sm break-words leading-snug">{trip.returnDropoff || trip.pickup}</p>
+          </div>
+        </>
+      )}
       {trip.serviceType !== "chauffeur" && (
         <div className="space-y-0.5 min-w-0">
           <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">Distance</p>
@@ -757,6 +804,12 @@ const PassengerStep = ({
           <Row label="From" value={trip.pickup} truncate />
           <Row label="To" value={trip.dropoff} truncate />
           <Row label="Date" value={`${trip.pickupDate} - ${trip.pickupTime}${trip.serviceType === "chauffeur" && trip.endTime ? ` to ${trip.endTime}` : ""}`} />
+          {trip.direction === "return" && (
+            <>
+              <Row label="Return pickup" value={trip.returnPickup || trip.dropoff} truncate />
+              <Row label="Return dropoff" value={trip.returnDropoff || trip.pickup} truncate />
+            </>
+          )}
           {trip.direction === "return" && trip.returnDate && (
             <Row label="Return" value={`${trip.returnDate} • ${trip.returnTime}`} />
           )}
@@ -863,8 +916,8 @@ const BookingWizard = () => {
       toast({ title: "Missing details", description: "Please fill in all required trip details.", variant: "destructive" });
       return;
     }
-    if (trip.direction === "return" && !isChauffeur && (!trip.returnDate || !trip.returnTime)) {
-      toast({ title: "Return trip details", description: "Please add the return date and time.", variant: "destructive" });
+    if (trip.direction === "return" && !isChauffeur && (!trip.returnPickup || !trip.returnDropoff || !trip.returnDate || !trip.returnTime)) {
+      toast({ title: "Return trip details", description: "Please add the return pickup, return dropoff, date and time.", variant: "destructive" });
       return;
     }
 
@@ -979,7 +1032,7 @@ const BookingWizard = () => {
       }
       if (passenger.notes) noteParts.push(passenger.notes);
       if (trip.direction === "return" && trip.returnDate) {
-        noteParts.push(`Return trip: ${trip.dropoff} → ${trip.pickup} on ${trip.returnDate} at ${trip.returnTime}`);
+        noteParts.push(`Return trip: ${trip.returnPickup || trip.dropoff} -> ${trip.returnDropoff || trip.pickup} on ${trip.returnDate} at ${trip.returnTime}`);
       }
 
       const isGuest = !user;

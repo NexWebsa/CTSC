@@ -216,7 +216,7 @@ Deno.serve(async (req) => {
     let returnTime = "—";
     if (returnFromNotes) {
       const m = returnFromNotes.match(
-        /^(.+?)\s*→\s*(.+?)\s+on\s+(.+?)\s+at\s+(.+)$/i
+        /^(.+?)\s*(?:\u2192|->)\s*(.+?)\s+on\s+(.+?)\s+at\s+(.+)$/i
       );
       if (m) {
         returnPickup = m[1].trim();
