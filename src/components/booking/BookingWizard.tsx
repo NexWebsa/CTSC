@@ -67,7 +67,7 @@ interface PassengerData {
 }
 
 const TABS: { value: ServiceTab; label: string; icon: typeof Plane }[] = [
-  { value: "airport_transfer", label: "Airport Transfer", icon: Plane },
+  { value: "airport_transfer", label: "City Transfers", icon: Plane },
   { value: "chauffeur", label: "Shuttle Hire", icon: Car },
   // { value: "point_to_point", label: "Staff Service", icon: Briefcase },
 ];
