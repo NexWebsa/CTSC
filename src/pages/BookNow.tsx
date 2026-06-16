@@ -29,10 +29,10 @@ const BookNow = () => {
           className="absolute inset-0 -z-30 h-full w-full object-cover object-[42%_center] md:object-center"
         />
 
-        {/* Premium dark overlays */}
-        <div className="absolute inset-0 -z-20 bg-black/65 sm:bg-black/60" />
-        <div className="absolute inset-0 -z-20 bg-gradient-to-b from-black/85 via-black/35 to-black/90" />
-        <div className="absolute inset-0 -z-20 bg-gradient-to-r from-black/75 via-black/20 to-black/55" />
+        {/* Premium dark overlays - lighter so background stays visible */}
+        <div className="absolute inset-0 -z-20 bg-black/35 sm:bg-black/30" />
+        <div className="absolute inset-0 -z-20 bg-gradient-to-b from-black/65 via-black/20 to-black/75" />
+        <div className="absolute inset-0 -z-20 bg-gradient-to-r from-black/55 via-black/10 to-black/35" />
 
         {/* Soft luxury glows */}
         <div className="absolute left-1/2 top-10 -z-10 h-[22rem] w-[22rem] -translate-x-1/2 rounded-full bg-accent/25 blur-[140px] sm:h-[34rem] sm:w-[34rem]" />
