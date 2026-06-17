@@ -1,6 +1,6 @@
 import { useEffect, useState, useRef } from "react";
 import { motion } from "framer-motion";
-import { Truck, Plus, Edit2, Trash2, Upload, X } from "lucide-react";
+import { Truck, Plus, Edit2, Power, Upload, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -9,6 +9,7 @@ import { uploadImage } from "@/lib/storage";
 import { useAuth } from "@/contexts/AuthContext";
 import { useAdminCheck } from "@/hooks/useAdminCheck";
 import { useToast } from "@/hooks/use-toast";
+import { DeleteConfirmButton } from "@/components/admin/DeleteConfirmButton";
 
 
 interface Vehicle {
@@ -33,6 +34,7 @@ const AdminFleet = () => {
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
+  const [deletingId, setDeletingId] = useState<string | null>(null);
   const [form, setForm] = useState({ name: "", description: "", capacity: "4", price_per_km: "", price_per_hour: "", image_url: "", features: "", gallery_images: [] as string[] });
   const [uploading, setUploading] = useState(false);
   const [galleryUploading, setGalleryUploading] = useState(false);
@@ -69,8 +71,9 @@ const AdminFleet = () => {
       setForm(prev => ({ ...prev, image_url: publicUrl }));
       setPreviewUrl(publicUrl);
       toast({ title: "Image uploaded" });
-    } catch (err: any) {
-      toast({ title: "Upload failed", description: err.message, variant: "destructive" });
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : "Could not upload image";
+      toast({ title: "Upload failed", description: message, variant: "destructive" });
     } finally {
       setUploading(false);
       if (fileInputRef.current) fileInputRef.current.value = "";
@@ -124,8 +127,9 @@ const AdminFleet = () => {
       }
       setForm((prev) => ({ ...prev, gallery_images: [...prev.gallery_images, ...urls] }));
       toast({ title: `${urls.length} image(s) uploaded` });
-    } catch (err: any) {
-      toast({ title: "Upload failed", description: err.message, variant: "destructive" });
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : "Could not upload gallery images";
+      toast({ title: "Upload failed", description: message, variant: "destructive" });
     } finally {
       setGalleryUploading(false);
       if (galleryInputRef.current) galleryInputRef.current.value = "";
@@ -153,8 +157,39 @@ const AdminFleet = () => {
   };
 
   const toggleActive = async (id: string, current: boolean) => {
-    await supabase.from("vehicles").update({ is_active: !current }).eq("id", id);
+    const { error } = await supabase.from("vehicles").update({ is_active: !current }).eq("id", id);
+    if (error) {
+      toast({ title: "Failed to update vehicle status", description: error.message, variant: "destructive" });
+      return;
+    }
     fetchVehicles();
+  };
+
+  const handleDelete = async (vehicle: Vehicle) => {
+    setDeletingId(vehicle.id);
+    try {
+      const { error: bookingError } = await supabase
+        .from("bookings")
+        .update({ vehicle_id: null, updated_at: new Date().toISOString() })
+        .eq("vehicle_id", vehicle.id);
+
+      if (bookingError) {
+        toast({ title: "Failed to unlink vehicle bookings", description: bookingError.message, variant: "destructive" });
+        return;
+      }
+
+      const { error } = await supabase.from("vehicles").delete().eq("id", vehicle.id);
+      if (error) {
+        toast({ title: "Failed to delete vehicle", description: error.message, variant: "destructive" });
+        return;
+      }
+
+      if (editingId === vehicle.id) resetForm();
+      toast({ title: "Vehicle deleted", description: `${vehicle.name} was removed from the database.` });
+      await fetchVehicles();
+    } finally {
+      setDeletingId(null);
+    }
   };
 
   if (!isAdmin) return null;
@@ -308,7 +343,20 @@ const AdminFleet = () => {
                   </div>
                   <div className="flex gap-1">
                     <Button variant="ghost" size="icon" onClick={() => handleEdit(v)}><Edit2 className="w-4 h-4" /></Button>
-                    <Button variant="ghost" size="icon" onClick={() => toggleActive(v.id, v.is_active)}><Trash2 className="w-4 h-4 text-muted-foreground" /></Button>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      onClick={() => toggleActive(v.id, v.is_active)}
+                      title={v.is_active ? "Deactivate vehicle" : "Activate vehicle"}
+                    >
+                      <Power className={`w-4 h-4 ${v.is_active ? "text-green-600" : "text-muted-foreground"}`} />
+                    </Button>
+                    <DeleteConfirmButton
+                      itemName={v.name}
+                      itemType="vehicle"
+                      onConfirm={() => handleDelete(v)}
+                      isDeleting={deletingId === v.id}
+                    />
                   </div>
                 </div>
                 <div className="text-xs text-muted-foreground space-y-0.5">

@@ -7,6 +7,7 @@ import { Label } from "@/components/ui/label";
 import { supabase } from "@/lib/supabase";
 import { useAdminCheck } from "@/hooks/useAdminCheck";
 import { useToast } from "@/hooks/use-toast";
+import { DeleteConfirmButton } from "@/components/admin/DeleteConfirmButton";
 
 interface TripType {
   id: string;
@@ -30,6 +31,7 @@ const AdminSettings = () => {
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
+  const [deletingId, setDeletingId] = useState<string | null>(null);
   const [form, setForm] = useState({ name: "", description: "", service_type: "airport_transfer", is_active: true });
   const [saving, setSaving] = useState(false);
 
@@ -101,8 +103,29 @@ const AdminSettings = () => {
   };
 
   const toggleActive = async (id: string, active: boolean) => {
-    await supabase.from("trip_types").update({ is_active: !active }).eq("id", id);
+    const { error } = await supabase.from("trip_types").update({ is_active: !active }).eq("id", id);
+    if (error) {
+      toast({ title: "Status update failed", description: error.message, variant: "destructive" });
+      return;
+    }
     fetchTripTypes();
+  };
+
+  const handleDelete = async (type: TripType) => {
+    setDeletingId(type.id);
+    try {
+      const { error } = await supabase.from("trip_types").delete().eq("id", type.id);
+      if (error) {
+        toast({ title: "Delete failed", description: error.message, variant: "destructive" });
+        return;
+      }
+
+      if (editingId === type.id) resetForm();
+      toast({ title: "Trip type deleted", description: `${type.name} was removed from the database.` });
+      await fetchTripTypes();
+    } finally {
+      setDeletingId(null);
+    }
   };
 
   if (!isAdmin) return null;
@@ -199,6 +222,15 @@ const AdminSettings = () => {
                   <Button variant="outline" size="sm" className="rounded-full gap-2" onClick={() => handleEdit(type)}>
                     <Edit2 className="w-4 h-4" /> Edit
                   </Button>
+                  <DeleteConfirmButton
+                    itemName={type.name}
+                    itemType="trip type"
+                    onConfirm={() => handleDelete(type)}
+                    isDeleting={deletingId === type.id}
+                    size="sm"
+                    showLabel
+                    className="rounded-full gap-2 text-destructive border border-destructive/30 hover:bg-destructive/10"
+                  />
                 </div>
               </div>
             ))}

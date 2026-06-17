@@ -8,6 +8,8 @@ import { Button } from "@/components/ui/button";
 import { supabase } from "@/lib/supabase";
 import { useAuth } from "@/contexts/AuthContext";
 import { useAdminCheck } from "@/hooks/useAdminCheck";
+import { useToast } from "@/hooks/use-toast";
+import { DeleteConfirmButton } from "@/components/admin/DeleteConfirmButton";
 
 import { formatNotes } from "@/lib/formatNotes";
 
@@ -59,6 +61,7 @@ const statusColors: Record<string, string> = {
 const AdminDashboard = () => {
   const { user } = useAuth();
   const { isAdmin } = useAdminCheck();
+  const { toast } = useToast();
   const [bookings, setBookings] = useState<Booking[]>([]);
   const [drivers, setDrivers] = useState<Driver[]>([]);
   const [loading, setLoading] = useState(true);
@@ -117,16 +120,34 @@ const AdminDashboard = () => {
 
   const updateStatus = async (id: string, status: string) => {
     setActionLoading(id);
-    await supabase.from("bookings").update({ status, updated_at: new Date().toISOString() }).eq("id", id);
+    const { error } = await supabase.from("bookings").update({ status, updated_at: new Date().toISOString() }).eq("id", id);
+    if (error) toast({ title: "Failed to update booking", description: error.message, variant: "destructive" });
     setActionLoading(null);
   };
 
   const assignDriver = async (bookingId: string, driverId: string) => {
     setActionLoading(bookingId);
-    await supabase.from("bookings").update({
+    const { error } = await supabase.from("bookings").update({
       driver_id: driverId, status: "driver_assigned", updated_at: new Date().toISOString(),
     }).eq("id", bookingId);
+    if (error) toast({ title: "Failed to assign driver", description: error.message, variant: "destructive" });
     setActionLoading(null);
+  };
+
+  const deleteBooking = async (booking: Booking) => {
+    setActionLoading(booking.id);
+    try {
+      const { error } = await supabase.from("bookings").delete().eq("id", booking.id);
+      if (error) {
+        toast({ title: "Failed to delete booking", description: error.message, variant: "destructive" });
+        return;
+      }
+
+      toast({ title: "Booking deleted", description: `${booking.customer_name || "Booking"} was removed from the database.` });
+      await fetchData();
+    } finally {
+      setActionLoading(null);
+    }
   };
 
   if (!isAdmin) return null;
@@ -292,6 +313,16 @@ const AdminDashboard = () => {
                           <XCircle className="w-3 h-3" /> Cancel
                         </Button>
                       )}
+                      <DeleteConfirmButton
+                        itemName={`booking for ${booking.customer_name || "Unknown"} on ${booking.pickup_date}`}
+                        itemType="booking"
+                        onConfirm={() => deleteBooking(booking)}
+                        disabled={isActioning}
+                        isDeleting={isActioning}
+                        size="sm"
+                        showLabel
+                        className="text-xs gap-1.5 rounded-xl ml-auto text-destructive border border-destructive/30 hover:bg-destructive/10"
+                      />
                     </div>
                   </motion.div>
                 );

@@ -9,6 +9,8 @@ import { Input } from "@/components/ui/input";
 import { supabase } from "@/lib/supabase";
 import { useAdminCheck } from "@/hooks/useAdminCheck";
 import { formatNotes } from "@/lib/formatNotes";
+import { useToast } from "@/hooks/use-toast";
+import { DeleteConfirmButton } from "@/components/admin/DeleteConfirmButton";
 
 interface Booking {
   id: string;
@@ -52,7 +54,7 @@ interface Driver {
 interface Profile {
   id: string;
   full_name: string | null;
-  email?: string | null;
+  phone?: string | null;
 }
 
 const statusColors: Record<string, string> = {
@@ -78,6 +80,7 @@ type SortDir = "asc" | "desc";
 
 const AdminBookings = () => {
   const { isAdmin } = useAdminCheck();
+  const { toast } = useToast();
   const [bookings, setBookings] = useState<Booking[]>([]);
   const [drivers, setDrivers] = useState<Driver[]>([]);
   const [loading, setLoading] = useState(true);
@@ -105,7 +108,7 @@ const AdminBookings = () => {
     ]);
     const profileMap = new Map<string, { name: string; email: string; phone: string }>();
     (profilesRes.data as Profile[] || []).forEach(p => {
-      profileMap.set(p.id, { name: p.full_name || "Unknown", email: (p as any).email || "", phone: (p as any).phone || "" });
+      profileMap.set(p.id, { name: p.full_name || "Unknown", email: "", phone: p.phone || "" });
     });
     const enriched = ((bookingsRes.data as unknown as Booking[]) || []).map(b => {
       if (b.is_guest) {
@@ -131,23 +134,42 @@ const AdminBookings = () => {
 
   const updateStatus = async (id: string, status: string) => {
     setActionLoading(id);
-    await supabase.from("bookings").update({ status, updated_at: new Date().toISOString() }).eq("id", id);
+    const { error } = await supabase.from("bookings").update({ status, updated_at: new Date().toISOString() }).eq("id", id);
+    if (error) toast({ title: "Failed to update booking", description: error.message, variant: "destructive" });
     setActionLoading(null);
   };
 
   const assignDriver = async (bookingId: string, driverId: string) => {
     setActionLoading(bookingId);
-    await supabase.from("bookings").update({
+    const { error } = await supabase.from("bookings").update({
       driver_id: driverId,
       status: "driver_assigned",
       updated_at: new Date().toISOString(),
     }).eq("id", bookingId);
+    if (error) toast({ title: "Failed to assign driver", description: error.message, variant: "destructive" });
     setActionLoading(null);
+  };
+
+  const deleteBooking = async (booking: Booking) => {
+    setActionLoading(booking.id);
+    try {
+      const { error } = await supabase.from("bookings").delete().eq("id", booking.id);
+      if (error) {
+        toast({ title: "Failed to delete booking", description: error.message, variant: "destructive" });
+        return;
+      }
+
+      if (expanded === booking.id) setExpanded(null);
+      toast({ title: "Booking deleted", description: `${booking.customer_name || "Booking"} was removed from the database.` });
+      await fetchData();
+    } finally {
+      setActionLoading(null);
+    }
   };
 
   const filtered = useMemo(() => {
     const q = search.trim().toLowerCase();
-    let rows = bookings.filter(b => {
+    const rows = bookings.filter(b => {
       if (statusFilter !== "all" && b.status !== statusFilter) return false;
       if (paymentFilter !== "all" && (b.payment_status || "unpaid") !== paymentFilter) return false;
       if (dateFrom && b.pickup_date < dateFrom) return false;
@@ -431,10 +453,21 @@ const AdminBookings = () => {
                     </Button>
                   )}
 
+                  <DeleteConfirmButton
+                    itemName={`booking for ${booking.customer_name || "Unknown"} on ${booking.pickup_date}`}
+                    itemType="booking"
+                    onConfirm={() => deleteBooking(booking)}
+                    disabled={isActioning}
+                    isDeleting={isActioning}
+                    size="sm"
+                    showLabel
+                    className="text-xs gap-1.5 rounded-xl ml-auto text-destructive border border-destructive/30 hover:bg-destructive/10"
+                  />
+
                   <Button
                     size="sm"
                     variant="ghost"
-                    className="text-xs gap-1.5 rounded-xl ml-auto"
+                    className="text-xs gap-1.5 rounded-xl"
                     onClick={() => setExpanded(isExpanded ? null : booking.id)}
                   >
                     {isExpanded ? <>Hide details <ChevronUp className="w-3 h-3" /></> : <>Details <ChevronDown className="w-3 h-3" /></>}

@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
-import { Users, Plus, Edit2, Trash2, Phone, Mail, Lock, Eye, EyeOff } from "lucide-react";
+import { Users, Plus, Edit2, Phone, Mail, Lock, Eye, EyeOff, Power } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -8,6 +8,7 @@ import { supabase } from "@/lib/supabase";
 import { useAuth } from "@/contexts/AuthContext";
 import { useAdminCheck } from "@/hooks/useAdminCheck";
 import { useToast } from "@/hooks/use-toast";
+import { DeleteConfirmButton } from "@/components/admin/DeleteConfirmButton";
 
 
 interface Driver {
@@ -20,6 +21,57 @@ interface Driver {
   created_at: string;
 }
 
+type DriverForm = {
+  full_name: string;
+  email: string;
+  phone: string;
+  license_number: string;
+  password: string;
+};
+
+type FunctionErrorPayload = {
+  error?: unknown;
+  message?: unknown;
+};
+
+const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+const normalizeDriverForm = (form: DriverForm) => ({
+  full_name: form.full_name.trim(),
+  email: form.email.trim().toLowerCase(),
+  phone: form.phone.trim(),
+  license_number: form.license_number.trim(),
+  password: form.password.trim(),
+});
+
+const getFunctionErrorMessage = async (error: unknown, response?: Response) => {
+  const fallback = error instanceof Error && error.message ? error.message : "Something went wrong";
+  const context =
+    typeof error === "object" && error !== null && "context" in error
+      ? (error as { context?: Response }).context
+      : undefined;
+  const errorResponse = response || context;
+
+  if (!errorResponse || typeof errorResponse.clone !== "function") return fallback;
+
+  try {
+    const body = (await errorResponse.clone().json()) as FunctionErrorPayload;
+    const serverMessage = [body.error, body.message].find(
+      (value): value is string => typeof value === "string" && value.trim().length > 0
+    );
+    if (serverMessage) return serverMessage.trim();
+  } catch {
+    try {
+      const text = await errorResponse.clone().text();
+      if (text.trim()) return text.trim();
+    } catch {
+      return fallback;
+    }
+  }
+
+  return fallback;
+};
+
 const AdminDrivers = () => {
   const { user } = useAuth();
   const { isAdmin } = useAdminCheck();
@@ -29,6 +81,7 @@ const AdminDrivers = () => {
   const [saving, setSaving] = useState(false);
   const [showForm, setShowForm] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
+  const [deletingId, setDeletingId] = useState<string | null>(null);
   const [showPassword, setShowPassword] = useState(false);
   const [form, setForm] = useState({
     full_name: "",
@@ -59,73 +112,108 @@ const AdminDrivers = () => {
   };
 
   const handleSave = async () => {
-    if (!form.full_name.trim()) {
+    const driverForm = normalizeDriverForm(form);
+
+    if (!driverForm.full_name) {
       toast({ title: "Name required", variant: "destructive" });
       return;
     }
 
     setSaving(true);
+    let saved = false;
 
-    if (editingId) {
-      // Editing existing driver — just update the drivers table
-      const { error } = await supabase
-        .from("drivers")
-        .update({
-          full_name: form.full_name,
-          email: form.email,
-          phone: form.phone,
-          license_number: form.license_number,
-        })
-        .eq("id", editingId);
+    try {
+      if (editingId) {
+        if (!driverForm.email) {
+          toast({ title: "Email required for drivers", variant: "destructive" });
+          return;
+        }
+        if (!EMAIL_PATTERN.test(driverForm.email)) {
+          toast({ title: "Enter a valid email address", variant: "destructive" });
+          return;
+        }
 
-      if (error) {
-        toast({ title: "Failed to update driver", description: error.message, variant: "destructive" });
-      } else {
+        const { data, error, response } = await supabase.functions.invoke("manage-driver", {
+          body: {
+            action: "update",
+            driver_id: editingId,
+            full_name: driverForm.full_name,
+            email: driverForm.email,
+            phone: driverForm.phone || null,
+            license_number: driverForm.license_number || null,
+          },
+        });
+
+        if (error) {
+          const description = await getFunctionErrorMessage(error, response);
+          console.error("Update driver failed", { error, description });
+          toast({ title: "Failed to update driver", description, variant: "destructive" });
+          return;
+        }
+
+        if (data?.error) {
+          toast({ title: "Failed to update driver", description: data.error, variant: "destructive" });
+          return;
+        }
+
         toast({ title: "Driver updated ✅" });
-      }
-    } else {
-      // Creating new driver — call edge function to create auth user + driver + roles
-      if (!form.email.trim()) {
-        toast({ title: "Email required for new drivers", variant: "destructive" });
-        setSaving(false);
-        return;
-      }
-      if (!form.password.trim() || form.password.length < 6) {
-        toast({ title: "Password must be at least 6 characters", variant: "destructive" });
-        setSaving(false);
-        return;
-      }
-
-      const { data, error } = await supabase.functions.invoke("create-driver", {
-        body: {
-          email: form.email,
-          password: form.password,
-          full_name: form.full_name,
-          phone: form.phone,
-          license_number: form.license_number,
-        },
-      });
-
-      if (error) {
-        toast({
-          title: "Failed to create driver",
-          description: error.message || "Something went wrong",
-          variant: "destructive",
-        });
-      } else if (data?.error) {
-        toast({
-          title: "Failed to create driver",
-          description: data.error,
-          variant: "destructive",
-        });
+        saved = true;
       } else {
-        toast({ title: "Driver account created ✅", description: `${form.full_name} can now sign in with their email & password.` });
-      }
-    }
+        // Creating new driver — call edge function to create auth user + driver + roles
+        if (!driverForm.email) {
+          toast({ title: "Email required for new drivers", variant: "destructive" });
+          return;
+        }
+        if (!EMAIL_PATTERN.test(driverForm.email)) {
+          toast({ title: "Enter a valid email address", variant: "destructive" });
+          return;
+        }
+        if (!driverForm.password || driverForm.password.length < 6) {
+          toast({ title: "Password must be at least 6 characters", variant: "destructive" });
+          return;
+        }
 
-    setSaving(false);
-    resetForm();
-    fetchDrivers();
+        const { data, error, response } = await supabase.functions.invoke("create-driver", {
+          body: {
+            email: driverForm.email,
+            password: driverForm.password,
+            full_name: driverForm.full_name,
+            phone: driverForm.phone || null,
+            license_number: driverForm.license_number || null,
+          },
+        });
+
+        if (error) {
+          const description = await getFunctionErrorMessage(error, response);
+          console.error("Create driver failed", { error, description });
+          toast({
+            title: "Failed to create driver",
+            description,
+            variant: "destructive",
+          });
+          return;
+        }
+
+        if (data?.error) {
+          toast({
+            title: "Failed to create driver",
+            description: data.error,
+            variant: "destructive",
+          });
+          return;
+        }
+
+        toast({ title: "Driver account created ✅", description: `${driverForm.full_name} can now sign in with their email & password.` });
+        saved = true;
+      }
+
+      if (saved) {
+        resetForm();
+        await fetchDrivers();
+      }
+    } finally {
+      setSaving(false);
+    }
   };
 
   const handleEdit = (driver: Driver) => {
@@ -141,8 +229,42 @@ const AdminDrivers = () => {
   };
 
   const toggleActive = async (id: string, current: boolean) => {
-    await supabase.from("drivers").update({ is_active: !current }).eq("id", id);
+    const { error } = await supabase.from("drivers").update({ is_active: !current }).eq("id", id);
+    if (error) {
+      toast({ title: "Failed to update driver status", description: error.message, variant: "destructive" });
+      return;
+    }
     fetchDrivers();
+  };
+
+  const handleDelete = async (driver: Driver) => {
+    setDeletingId(driver.id);
+    try {
+      const { data, error, response } = await supabase.functions.invoke("manage-driver", {
+        body: {
+          action: "delete",
+          driver_id: driver.id,
+        },
+      });
+
+      if (error) {
+        const description = await getFunctionErrorMessage(error, response);
+        console.error("Delete driver failed", { error, description });
+        toast({ title: "Failed to delete driver", description, variant: "destructive" });
+        return;
+      }
+
+      if (data?.error) {
+        toast({ title: "Failed to delete driver", description: data.error, variant: "destructive" });
+        return;
+      }
+
+      if (editingId === driver.id) resetForm();
+      toast({ title: "Driver deleted", description: `${driver.full_name} was removed from the database.` });
+      await fetchDrivers();
+    } finally {
+      setDeletingId(null);
+    }
   };
 
   if (!isAdmin) return null;
@@ -197,10 +319,9 @@ const AdminDrivers = () => {
                   value={form.email}
                   onChange={(e) => setForm({ ...form, email: e.target.value })}
                   placeholder="driver@company.co.za"
-                  disabled={!!editingId}
                 />
                 {editingId && (
-                  <p className="text-xs text-muted-foreground">Email cannot be changed after creation</p>
+                  <p className="text-xs text-muted-foreground">Updating this email also updates the driver's login account.</p>
                 )}
               </div>
               {!editingId && (
@@ -297,9 +418,17 @@ const AdminDrivers = () => {
                       size="icon"
                       className="h-8 w-8"
                       onClick={() => toggleActive(driver.id, driver.is_active)}
+                      title={driver.is_active ? "Deactivate driver" : "Activate driver"}
                     >
-                      <Trash2 className="w-4 h-4 text-muted-foreground" />
+                      <Power className={`w-4 h-4 ${driver.is_active ? "text-green-600" : "text-muted-foreground"}`} />
                     </Button>
+                    <DeleteConfirmButton
+                      itemName={driver.full_name}
+                      itemType="driver"
+                      onConfirm={() => handleDelete(driver)}
+                      isDeleting={deletingId === driver.id}
+                      className="h-8 w-8"
+                    />
                   </div>
                 </div>
                 <div className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-3 text-xs text-muted-foreground">
