@@ -486,6 +486,8 @@ CREATE POLICY "Public Read Access to driver-photos" ON storage.objects
 
 ALTER TABLE bookings ADD COLUMN IF NOT EXISTS payment_status TEXT CHECK (payment_status IN ('unpaid', 'paid', 'failed')) DEFAULT 'unpaid';
 ALTER TABLE bookings ADD COLUMN IF NOT EXISTS yoco_checkout_id TEXT;
+ALTER TABLE bookings ADD COLUMN IF NOT EXISTS payment_confirmation_sent_at TIMESTAMPTZ;
+ALTER TABLE bookings ADD COLUMN IF NOT EXISTS payment_confirmation_email_ids JSONB;
 
 -- Update existing bookings to have 'unpaid' payment_status
 UPDATE bookings SET payment_status = 'unpaid' WHERE payment_status IS NULL;

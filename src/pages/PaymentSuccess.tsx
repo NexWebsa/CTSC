@@ -7,11 +7,21 @@ import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import { supabase } from "@/lib/supabase";
 
+type ConfirmationStatus =
+  | "checking"
+  | "processing"
+  | "confirmed"
+  | "fallback"
+  | "unknown";
+
+const MAX_CONFIRMATION_ATTEMPTS = 6;
+const CONFIRMATION_RETRY_MS = 2500;
+
 const PaymentSuccess = () => {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
   const bookingId = searchParams.get("booking_id");
-  const [status, setStatus] = useState<string>("checking");
+  const [status, setStatus] = useState<ConfirmationStatus>("checking");
 
   useEffect(() => {
     if (!bookingId) {
@@ -20,49 +30,69 @@ const PaymentSuccess = () => {
     }
 
     let cancelled = false;
+    let retryTimer: ReturnType<typeof setTimeout> | undefined;
 
-    const markPaid = async () => {
-      // Read current payment_status first — if webhook already fired, leave it alone.
-      const { data: current } = await supabase
-        .from("bookings")
-        .select("payment_status")
-        .eq("id", bookingId)
-        .single();
+    const confirmPaymentEmail = async (attempt = 1) => {
+      setStatus(attempt === 1 ? "checking" : "processing");
 
-      if (cancelled) return;
+      try {
+        const { data, error } = await supabase.functions.invoke(
+          "send-payment-confirmation",
+          {
+            body: { bookingId },
+          }
+        );
 
-      if (current?.payment_status === "paid") {
-        setStatus("paid");
-        return;
+        if (cancelled) return;
+        if (error) throw error;
+
+        const responseStatus =
+          data && typeof data.status === "string" ? data.status : "";
+
+        if (
+          responseStatus === "sent" ||
+          responseStatus === "already_sent" ||
+          data?.success === true
+        ) {
+          setStatus("confirmed");
+          return;
+        }
+
+        if (
+          (responseStatus === "not_paid" || responseStatus === "sending") &&
+          attempt < MAX_CONFIRMATION_ATTEMPTS
+        ) {
+          retryTimer = setTimeout(
+            () => confirmPaymentEmail(attempt + 1),
+            CONFIRMATION_RETRY_MS
+          );
+          return;
+        }
+
+        setStatus("fallback");
+      } catch (error) {
+        console.error("Payment confirmation check failed:", error);
+        if (!cancelled && attempt < MAX_CONFIRMATION_ATTEMPTS) {
+          retryTimer = setTimeout(
+            () => confirmPaymentEmail(attempt + 1),
+            CONFIRMATION_RETRY_MS
+          );
+          return;
+        }
+
+        if (!cancelled) setStatus("fallback");
       }
-
-      // Yoco redirected the user here, so flip payment_status optimistically.
-      // The yoco-webhook will idempotently confirm this server-side.
-      const { error } = await supabase
-        .from("bookings")
-        .update({
-          payment_status: "paid",
-          updated_at: new Date().toISOString(),
-        })
-        .eq("id", bookingId);
-
-      if (cancelled) return;
-
-      if (error) {
-        console.error("Failed to mark booking as paid:", error);
-        setStatus("processing");
-        return;
-      }
-
-      setStatus("paid");
     };
 
-    markPaid();
+    confirmPaymentEmail();
 
     return () => {
       cancelled = true;
+      if (retryTimer) clearTimeout(retryTimer);
     };
   }, [bookingId]);
+
+  const isLoading = status === "checking" || status === "processing";
 
   return (
     <div className="min-h-screen flex flex-col">
@@ -75,7 +105,7 @@ const PaymentSuccess = () => {
             className="bg-card border border-border rounded-2xl p-10 text-center"
           >
             <div className="mx-auto mb-6 w-16 h-16 rounded-full bg-emerald-500/10 flex items-center justify-center">
-              {status === "checking" ? (
+              {isLoading ? (
                 <Loader2 className="w-8 h-8 text-emerald-500 animate-spin" />
               ) : (
                 <CheckCircle2 className="w-8 h-8 text-emerald-500" />
@@ -83,18 +113,21 @@ const PaymentSuccess = () => {
             </div>
 
             <h1 className="text-3xl font-bold text-foreground mb-3">
-              {status === "checking"
-                ? "Confirming your payment…"
-                : "Payment Successful"}
+              {isLoading && "Confirming your payment..."}
+              {status === "confirmed" && "Payment Confirmed"}
+              {status === "fallback" && "Payment Processing"}
+              {status === "unknown" && "Payment Reference Missing"}
             </h1>
 
             <p className="text-muted-foreground mb-8">
-              {status === "paid" &&
-                "Thank you! Your booking is confirmed and marked as paid. We'll be in touch shortly with driver details."}
+              {status === "confirmed" &&
+                "Thank you! Your payment has been received and your confirmation email is on its way. We'll be in touch shortly with driver details."}
               {status === "processing" &&
-                "Your payment is being processed. It can take a moment to update — your dashboard will refresh automatically once confirmed."}
+                "Your payment is being verified. This can take a moment while Yoco notifies our system."}
               {status === "checking" &&
                 "Hang tight while we verify your payment with Yoco."}
+              {status === "fallback" &&
+                "Your payment may still be processing. If payment completed, your booking will update shortly and our team will follow up if the confirmation email needs attention."}
               {status === "unknown" &&
                 "We couldn't find your booking reference, but if you completed payment it'll appear on your dashboard shortly."}
             </p>

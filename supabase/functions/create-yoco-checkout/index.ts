@@ -72,7 +72,12 @@ Deno.serve(async (req) => {
       successUrl: `${origin}/payment-success?booking_id=${bookingId}`,
       cancelUrl: `${origin}/payment-cancelled?booking_id=${bookingId}`,
       failureUrl: `${origin}/payment-cancelled?booking_id=${bookingId}`,
-      metadata: { bookingId, userId: authUserId ?? "guest" },
+      metadata: {
+        bookingId,
+        booking_id: bookingId,
+        userId: authUserId ?? "guest",
+        user_id: authUserId ?? "guest",
+      },
     };
 
     const yocoResponse = await fetch("https://payments.yoco.com/api/checkouts", {
@@ -89,7 +94,10 @@ Deno.serve(async (req) => {
 
     const yocoData = await yocoResponse.json();
 
-    await admin.from("bookings").update({ yoco_checkout_id: yocoData.id }).eq("id", bookingId);
+    await admin
+      .from("bookings")
+      .update({ yoco_checkout_id: yocoData.id, updated_at: new Date().toISOString() })
+      .eq("id", bookingId);
 
     return new Response(
       JSON.stringify({ checkoutId: yocoData.id, redirectUrl: yocoData.redirectUrl, checkoutUrl: yocoData.redirectUrl }),

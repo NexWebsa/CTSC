@@ -7,6 +7,37 @@ const corsHeaders = {
     "authorization, x-client-info, apikey, content-type, webhook-id, webhook-timestamp, webhook-signature",
 };
 
+const readString = (value: unknown): string | null =>
+  typeof value === "string" && value.trim() ? value : null;
+
+const sendPaymentConfirmation = async (
+  supabaseUrl: string,
+  serviceRoleKey: string,
+  bookingId: string
+) => {
+  try {
+    const res = await fetch(`${supabaseUrl}/functions/v1/send-payment-confirmation`, {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${serviceRoleKey}`,
+        apikey: serviceRoleKey,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ bookingId }),
+    });
+
+    const body = await res.text();
+    if (!res.ok) {
+      console.error("send-payment-confirmation failed:", res.status, body);
+      return;
+    }
+
+    console.log("send-payment-confirmation response:", body);
+  } catch (error) {
+    console.error("send-payment-confirmation request failed:", error);
+  }
+};
+
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response("ok", { headers: corsHeaders });
@@ -90,32 +121,55 @@ Deno.serve(async (req) => {
     const supabase = createClient(supabaseUrl, supabaseKey);
 
     if (event.type === "payment.succeeded") {
-      const checkoutId = event.payload?.metadata?.checkoutId;
-      const bookingId = event.payload?.metadata?.bookingId;
+      const metadata = event.payload?.metadata ?? {};
+      const checkout = event.payload?.checkout ?? {};
+      const payment = event.payload?.payment ?? {};
+      const checkoutId =
+        readString(metadata.checkoutId) ??
+        readString(metadata.checkout_id) ??
+        readString(event.payload?.checkoutId) ??
+        readString(event.payload?.checkout_id) ??
+        readString(checkout.id) ??
+        readString(checkout.checkoutId) ??
+        readString(payment.checkoutId) ??
+        readString(payment.checkout_id);
+      const bookingId =
+        readString(metadata.bookingId) ??
+        readString(metadata.booking_id) ??
+        readString(event.payload?.bookingId) ??
+        readString(event.payload?.booking_id);
 
       if (bookingId) {
         // Update by bookingId from metadata
-        const { error } = await supabase
+        const { data, error } = await supabase
           .from("bookings")
           .update({ payment_status: "paid", updated_at: new Date().toISOString() })
-          .eq("id", bookingId);
+          .eq("id", bookingId)
+          .select("id");
 
         if (error) {
           console.error("Error updating booking by ID:", error);
         } else {
           console.log(`Booking ${bookingId} marked as paid`);
+          const paidBookingId = data?.[0]?.id ?? bookingId;
+          await sendPaymentConfirmation(supabaseUrl, supabaseKey, paidBookingId);
         }
       } else if (checkoutId) {
         // Fallback: update by checkout ID
-        const { error } = await supabase
+        const { data, error } = await supabase
           .from("bookings")
           .update({ payment_status: "paid", updated_at: new Date().toISOString() })
-          .eq("yoco_checkout_id", checkoutId);
+          .eq("yoco_checkout_id", checkoutId)
+          .select("id");
 
         if (error) {
           console.error("Error updating booking by checkout ID:", error);
         } else {
           console.log(`Booking with checkout ${checkoutId} marked as paid`);
+          const paidBookingId = data?.[0]?.id;
+          if (paidBookingId) {
+            await sendPaymentConfirmation(supabaseUrl, supabaseKey, paidBookingId);
+          }
         }
       } else {
         console.warn("No bookingId or checkoutId in webhook payload metadata");

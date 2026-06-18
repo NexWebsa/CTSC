@@ -85,6 +85,8 @@ export type Database = {
           notes: string | null
           oversize_luggage: boolean | null
           passengers: number | null
+          payment_confirmation_email_ids: Json | null
+          payment_confirmation_sent_at: string | null
           payment_status: string | null
           pickup_date: string
           pickup_location: string
@@ -126,6 +128,8 @@ export type Database = {
           notes?: string | null
           oversize_luggage?: boolean | null
           passengers?: number | null
+          payment_confirmation_email_ids?: Json | null
+          payment_confirmation_sent_at?: string | null
           payment_status?: string | null
           pickup_date: string
           pickup_location: string
@@ -167,6 +171,8 @@ export type Database = {
           notes?: string | null
           oversize_luggage?: boolean | null
           passengers?: number | null
+          payment_confirmation_email_ids?: Json | null
+          payment_confirmation_sent_at?: string | null
           payment_status?: string | null
           pickup_date?: string
           pickup_location?: string
