@@ -22,7 +22,8 @@ import { cn } from "@/lib/utils";
 import { AddressAutocomplete } from "./AddressAutocomplete";
 import { DatePicker, TimePicker } from "./DateTimePickers";
 import {
-  Vehicle, formatZAR, quoteVehicle, isReturnTripVehicle,
+  Vehicle, formatZAR, quoteVehicle, isReturnTripVehicle, isTestVehicle,
+  TEST_VEHICLE,
   EXTRAS, EXTRA_STOP_PRICE, computeExtrasTotal,
 } from "@/lib/pricing";
 
@@ -396,6 +397,12 @@ const SUPPORT_CONTACT = {
   whatsapp: "https://wa.me/27837668601",
   email: "info@ctsctravel.com",
   phone: "083 766 8601",
+};
+
+const withTestVehicle = (vehicles: Vehicle[]): Vehicle[] => {
+  const existingTestVehicle = vehicles.find(isTestVehicle);
+  const productionVehicles = vehicles.filter((vehicle) => !isTestVehicle(vehicle));
+  return [existingTestVehicle ?? TEST_VEHICLE, ...productionVehicles];
 };
 
 const CancellationNotice = ({ isGuest }: { isGuest: boolean }) => (
@@ -1778,8 +1785,8 @@ const BookingWizard = () => {
 
       if (vErr) throw vErr;
 
-      const list = ((vData as Vehicle[]) || []).sort(
-        (a, b) => a.capacity - b.capacity
+      const list = withTestVehicle(
+        ((vData as Vehicle[]) || []).sort((a, b) => a.capacity - b.capacity)
       );
 
       setVehicles(list);
@@ -1891,6 +1898,11 @@ const BookingWizard = () => {
 
       noteParts.push(`Service: ${serviceLabel}`);
 
+      if (isTestVehicle(selectedVehicle)) {
+        noteParts.push(`Vehicle: ${selectedVehicle.name}`);
+        noteParts.push("Test booking: R2 payment-flow vehicle");
+      }
+
       if (trip.serviceType === "airport_transfer") {
         noteParts.push(`Airport transfer: ${trip.airportTransfer ? "Yes" : "No"}`);
       }
@@ -1967,7 +1979,7 @@ const BookingWizard = () => {
         guest_name: isGuest ? passenger.fullName : null,
         guest_email: isGuest ? passenger.email : null,
         guest_phone: isGuest ? passenger.phone : null,
-        vehicle_id: selectedVehicle.id,
+        vehicle_id: isTestVehicle(selectedVehicle) ? null : selectedVehicle.id,
         service_type: effectiveServiceType,
         booking_type: trip.serviceType === "chauffeur" ? "hourly" : "transfer",
         pickup_location: trip.pickup,

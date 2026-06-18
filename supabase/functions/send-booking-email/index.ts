@@ -193,14 +193,13 @@ Deno.serve(async (req) => {
       );
     }
 
-    const fullName = profileName ?? booking.guest_name ?? "Customer";
-    const phone = profilePhone ?? booking.guest_phone ?? "";
-    const vehicleName = booking.vehicles?.name ?? "Vehicle";
-    const price = formatRand(booking.price_estimate);
-
     const flightFromNotes = extractFromNotes(booking.notes, "Flight");
     const passengersFromNotes = extractFromNotes(booking.notes, "Passengers") ?? "1";
     const returnFromNotes = extractFromNotes(booking.notes, "Return trip");
+    const fullName = profileName ?? booking.guest_name ?? "Customer";
+    const phone = profilePhone ?? booking.guest_phone ?? "";
+    const vehicleName = booking.vehicles?.name ?? extractFromNotes(booking.notes, "Vehicle") ?? "Vehicle";
+    const price = formatRand(booking.price_estimate);
     let extraDetails = booking.notes ?? "";
     if (extraDetails) {
       extraDetails = extraDetails

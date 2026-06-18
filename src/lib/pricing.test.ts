@@ -4,6 +4,7 @@ import {
   isReturnTripVehicle,
   lookupTablePrice,
   quoteVehicle,
+  TEST_VEHICLE,
   type Vehicle,
 } from "./pricing";
 
@@ -213,5 +214,29 @@ describe("distance rate-card pricing", () => {
       serviceType: "airport_transfer",
       extrasTotal: 100,
     })).toBe(1900);
+  });
+
+  it("keeps the hardcoded test vehicle at R2 for payment-flow testing", () => {
+    expect(isReturnTripVehicle(TEST_VEHICLE)).toBe(true);
+    expect(quoteVehicle(TEST_VEHICLE, {
+      distanceKm: 50,
+      isReturn: false,
+      serviceType: "airport_transfer",
+      extrasTotal: 100,
+    })).toBe(2);
+    expect(quoteVehicle(TEST_VEHICLE, {
+      distanceKm: 50,
+      isReturn: true,
+      serviceType: "point_to_point",
+      extrasTotal: 100,
+    })).toBe(2);
+    expect(quoteVehicle(TEST_VEHICLE, {
+      distanceKm: 0,
+      isReturn: false,
+      serviceType: "chauffeur",
+      hours: 4,
+      extrasTotal: 100,
+      poiPrice: 2500,
+    })).toBe(2);
   });
 });
