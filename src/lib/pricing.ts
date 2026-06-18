@@ -27,19 +27,6 @@ export interface QuoteInput {
   poiPrice?: number | null;
 }
 
-export const TEST_VEHICLE_ID = "00000000-0000-4000-8000-000000000002";
-export const TEST_VEHICLE_SLUG = "test_vehicle_r2";
-export const TEST_VEHICLE: Vehicle = {
-  id: TEST_VEHICLE_ID,
-  name: "Test Vehicle (R2)",
-  slug: TEST_VEHICLE_SLUG,
-  capacity: 99,
-  price_per_km: 0,
-  price_per_hour: 0,
-  image_url: null,
-  description: "Internal R2 payment-flow test vehicle.",
-};
-
 // --- Base rates -------------------------------------------------------------
 const MIN_FARE = 250;
 const BASE_FARE = 80;
@@ -59,14 +46,6 @@ export const EXTRAS: { id: string; label: string; price: number; max: number }[]
 ];
 
 export const EXTRA_STOP_PRICE = 100; // includes 15 min waiting time
-
-export function isTestVehicle(vehicle: Pick<Vehicle, "id" | "name" | "slug">): boolean {
-  return (
-    vehicle.id === TEST_VEHICLE_ID ||
-    vehicle.slug === TEST_VEHICLE_SLUG ||
-    vehicle.name.toLowerCase() === "test vehicle (r2)"
-  );
-}
 
 export function computeExtrasTotal(
   extras: Record<string, number>,
@@ -258,7 +237,6 @@ function lookupReturnTripPriceFromRow(row: ReturnTripRateRow, distanceKm: number
 }
 
 export function isReturnTripVehicle(vehicle: Pick<Vehicle, "name" | "slug">): boolean {
-  if (vehicle.slug === TEST_VEHICLE_SLUG) return true;
   return matchReturnTripVehicleKey(vehicle) != null;
 }
 
@@ -278,8 +256,6 @@ function lookupAirportTransferPrice(vehicleName: string, distanceKm: number, veh
 }
 
 export function quoteVehicle(vehicle: Vehicle, input: QuoteInput): number {
-  if (isTestVehicle(vehicle)) return 2;
-
   // Chauffeur / Shuttle Hire: prefer POI rate-card price for this vehicle.
   if (input.serviceType === "chauffeur") {
     if (input.poiPrice && input.poiPrice > 0) {

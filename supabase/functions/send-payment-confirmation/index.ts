@@ -9,7 +9,7 @@ const corsHeaders = {
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL") ?? "";
 const SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "";
 const FROM_EMAIL = Deno.env.get("FROM_EMAIL") ?? "ctscbooking@ctsctravel.com";
-const DEFAULT_ADMIN_EMAIL = "nexwebsa@gmail.com";
+const DEFAULT_ADMIN_EMAIL = "accounts@shuttlecapetown.co.za";
 
 interface BookingRow {
   id: string;
@@ -396,9 +396,13 @@ Deno.serve(async (req) => {
     }
 
     const apiKey = Deno.env.get("CTSC_RESEND_KEY") ?? Deno.env.get("RESEND_API_KEY");
-    const adminEmails = parseEmailList(
+    const configuredAdminEmails = parseEmailList(
       Deno.env.get("ADMIN_EMAIL") ?? Deno.env.get("OWNER_EMAIL") ?? DEFAULT_ADMIN_EMAIL
     );
+    const adminEmails = configuredAdminEmails.filter(
+      (email) => email.toLowerCase() !== "nexwebsa@gmail.com"
+    );
+    if (!adminEmails.length) adminEmails.push(DEFAULT_ADMIN_EMAIL);
 
     if (!apiKey) {
       console.error("Payment is confirmed but CTSC_RESEND_KEY or RESEND_API_KEY is not set");
