@@ -9,6 +9,7 @@ const corsHeaders = {
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL") ?? "";
 const SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "";
 const FROM_EMAIL = Deno.env.get("FROM_EMAIL") ?? "ctscbooking@ctsctravel.com";
+const DEFAULT_ADMIN_EMAIL = "nexwebsa@gmail.com";
 
 interface BookingRow {
   id: string;
@@ -44,6 +45,7 @@ interface EmailSendRecord {
   to?: EmailRecipient;
   id?: string;
   skipped?: string;
+  error?: string;
 }
 
 const jsonResponse = (body: Record<string, unknown>, status = 200): Response =>
@@ -395,7 +397,7 @@ Deno.serve(async (req) => {
 
     const apiKey = Deno.env.get("CTSC_RESEND_KEY") ?? Deno.env.get("RESEND_API_KEY");
     const adminEmails = parseEmailList(
-      Deno.env.get("ADMIN_EMAIL") ?? Deno.env.get("OWNER_EMAIL") ?? "info@ctsctravel.com"
+      Deno.env.get("ADMIN_EMAIL") ?? Deno.env.get("OWNER_EMAIL") ?? DEFAULT_ADMIN_EMAIL
     );
 
     if (!apiKey) {
@@ -541,8 +543,10 @@ Deno.serve(async (req) => {
       admin: {},
     };
 
-    try {
-      if (customerEmail) {
+    const emailErrors: string[] = [];
+
+    if (customerEmail) {
+      try {
         const customerResend = await sendEmail(
           apiKey,
           customerEmail,
@@ -550,11 +554,18 @@ Deno.serve(async (req) => {
           customerHtml
         );
         emailIds.customer = { to: customerEmail, id: emailIdFromResponse(customerResend) };
-      } else {
-        console.warn(`Booking ${bookingId} has no customer email; customer payment confirmation skipped`);
-        emailIds.customer = { skipped: "missing_customer_email" };
+      } catch (customerError) {
+        const message = customerError instanceof Error ? customerError.message : "Unknown customer email error";
+        console.error("Customer payment confirmation email failed:", customerError);
+        emailErrors.push(`customer: ${message}`);
+        emailIds.customer = { to: customerEmail, error: message };
       }
+    } else {
+      console.warn(`Booking ${bookingId} has no customer email; customer payment confirmation skipped`);
+      emailIds.customer = { skipped: "missing_customer_email" };
+    }
 
+    try {
       const adminResend = await sendEmail(
         apiKey,
         adminEmails,
@@ -563,10 +574,18 @@ Deno.serve(async (req) => {
         customerEmail
       );
       emailIds.admin = { to: adminEmails, id: emailIdFromResponse(adminResend) };
+    } catch (adminError) {
+      const message = adminError instanceof Error ? adminError.message : "Unknown admin email error";
+      console.error("Admin payment notification email failed:", adminError);
+      emailErrors.push(`admin: ${message}`);
+      emailIds.admin = { to: adminEmails, error: message };
+    }
 
+    try {
       const sentAt = new Date().toISOString();
-      emailIds.status = "sent";
+      emailIds.status = emailErrors.length ? "partial_failed" : "sent";
       emailIds.sent_at = sentAt;
+      if (emailErrors.length) emailIds.error = emailErrors.join(" | ");
 
       const { error: updateError } = await admin
         .from("bookings")
@@ -583,11 +602,11 @@ Deno.serve(async (req) => {
 
       return jsonResponse({
         success: true,
-        status: "sent",
+        status: emailErrors.length ? "email_partial_failed" : "sent",
         bookingId,
         paymentConfirmed: true,
-        customerEmailSent: Boolean(customerEmail),
-        adminEmailSent: true,
+        customerEmailSent: Boolean(emailIds.customer.id),
+        adminEmailSent: Boolean(emailIds.admin.id),
         emailIds,
       });
     } catch (sendError) {
