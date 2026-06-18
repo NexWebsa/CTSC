@@ -52,6 +52,10 @@ const PaymentSuccess = () => {
         if (
           responseStatus === "sent" ||
           responseStatus === "already_sent" ||
+          responseStatus === "email_failed" ||
+          responseStatus === "email_not_configured" ||
+          responseStatus === "paid_tracking_unavailable" ||
+          data?.paymentConfirmed === true ||
           data?.success === true
         ) {
           setStatus("confirmed");

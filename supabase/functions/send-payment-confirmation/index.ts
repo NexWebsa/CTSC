@@ -30,8 +30,6 @@ interface BookingRow {
   passengers: number | null;
   payment_status: string | null;
   yoco_checkout_id: string | null;
-  payment_confirmation_sent_at: string | null;
-  payment_confirmation_email_ids: unknown;
   created_at: string | null;
   vehicles?: { name: string | null; capacity: number | null } | null;
 }
@@ -96,6 +94,113 @@ const isRecord = (value: unknown): value is Record<string, unknown> =>
 const emailIdFromResponse = (value: unknown): string | undefined => {
   if (!isRecord(value)) return undefined;
   return typeof value.id === "string" ? value.id : undefined;
+};
+
+const readString = (value: unknown): string | null =>
+  typeof value === "string" && value.trim() ? value.trim() : null;
+
+const normalizeStatus = (value: unknown): string | null =>
+  readString(value)?.toLowerCase().replace(/[\s_-]+/g, "_") ?? null;
+
+const isPaidStatus = (value: unknown): boolean => {
+  const status = normalizeStatus(value);
+  return Boolean(
+    status &&
+      ["paid", "succeeded", "successful", "success", "complete", "completed", "captured"].includes(status)
+  );
+};
+
+const getYocoStatus = (payload: unknown): string | null => {
+  if (!isRecord(payload)) return null;
+
+  const payment = isRecord(payload.payment) ? payload.payment : null;
+  const checkout = isRecord(payload.checkout) ? payload.checkout : null;
+  const charge = isRecord(payload.charge) ? payload.charge : null;
+  const payments = Array.isArray(payload.payments) ? payload.payments : [];
+
+  const candidates = [
+    payload.status,
+    payload.paymentStatus,
+    payload.payment_status,
+    payload.checkoutStatus,
+    payload.checkout_status,
+    payment?.status,
+    checkout?.status,
+    charge?.status,
+    ...payments.map((item) => (isRecord(item) ? item.status : null)),
+  ];
+
+  return candidates.map(normalizeStatus).find(Boolean) ?? null;
+};
+
+const isYocoPaidPayload = (payload: unknown): boolean => {
+  if (!isRecord(payload)) return false;
+
+  const payment = isRecord(payload.payment) ? payload.payment : null;
+  const checkout = isRecord(payload.checkout) ? payload.checkout : null;
+  const charge = isRecord(payload.charge) ? payload.charge : null;
+  const payments = Array.isArray(payload.payments) ? payload.payments : [];
+
+  return [
+    payload.status,
+    payload.paymentStatus,
+    payload.payment_status,
+    payload.checkoutStatus,
+    payload.checkout_status,
+    payment?.status,
+    checkout?.status,
+    charge?.status,
+    ...payments.map((item) => (isRecord(item) ? item.status : null)),
+  ].some(isPaidStatus);
+};
+
+const verifyYocoCheckoutPaid = async (
+  checkoutId: string | null
+): Promise<{ paid: boolean; status: string | null; detail?: string }> => {
+  if (!checkoutId) {
+    return { paid: false, status: null, detail: "missing_checkout_id" };
+  }
+
+  const yocoSecretKey = Deno.env.get("YOCO_SECRET_KEY");
+  if (!yocoSecretKey) {
+    return { paid: false, status: null, detail: "YOCO_SECRET_KEY_not_configured" };
+  }
+
+  try {
+    const res = await fetch(
+      `https://payments.yoco.com/api/checkouts/${encodeURIComponent(checkoutId)}`,
+      {
+        method: "GET",
+        headers: {
+          Authorization: `Bearer ${yocoSecretKey}`,
+          "Content-Type": "application/json",
+        },
+      }
+    );
+
+    const text = await res.text();
+    let parsed: unknown = text;
+    try {
+      parsed = JSON.parse(text);
+    } catch {
+      // Keep non-JSON Yoco responses as text for logging.
+    }
+
+    if (!res.ok) {
+      console.warn("Yoco checkout verification failed:", res.status, parsed);
+      return { paid: false, status: null, detail: `yoco_${res.status}` };
+    }
+
+    const status = getYocoStatus(parsed);
+    return { paid: isYocoPaidPayload(parsed), status };
+  } catch (error) {
+    console.error("Yoco checkout verification request failed:", error);
+    return {
+      paid: false,
+      status: null,
+      detail: error instanceof Error ? error.message : "unknown_yoco_error",
+    };
+  }
 };
 
 const renderRows = (rows: Array<[string, string | null | undefined]>): string =>
@@ -173,17 +278,8 @@ Deno.serve(async (req) => {
   }
 
   try {
-    const apiKey = Deno.env.get("CTSC_RESEND_KEY") ?? Deno.env.get("RESEND_API_KEY");
-    if (!apiKey) {
-      return jsonResponse({ error: "CTSC_RESEND_KEY or RESEND_API_KEY is not set" }, 500);
-    }
     if (!SUPABASE_URL || !SERVICE_ROLE_KEY) {
       return jsonResponse({ error: "Supabase environment not configured" }, 500);
-    }
-
-    const adminEmails = parseEmailList(Deno.env.get("ADMIN_EMAIL") ?? Deno.env.get("OWNER_EMAIL"));
-    if (!adminEmails.length) {
-      return jsonResponse({ error: "ADMIN_EMAIL is not set" }, 500);
     }
 
     const body: RequestBody = await req.json().catch(() => ({}));
@@ -199,7 +295,7 @@ Deno.serve(async (req) => {
     const { data: booking, error: bookingError } = await admin
       .from("bookings")
       .select(
-        "id, user_id, is_guest, guest_name, guest_email, guest_phone, vehicle_id, service_type, booking_type, pickup_location, dropoff_location, pickup_date, pickup_time, status, price_estimate, notes, passengers, payment_status, yoco_checkout_id, payment_confirmation_sent_at, payment_confirmation_email_ids, created_at, vehicles(name, capacity)"
+        "id, user_id, is_guest, guest_name, guest_email, guest_phone, vehicle_id, service_type, booking_type, pickup_location, dropoff_location, pickup_date, pickup_time, status, price_estimate, notes, passengers, payment_status, yoco_checkout_id, created_at, vehicles(name, capacity)"
       )
       .eq("id", bookingId)
       .maybeSingle<BookingRow>();
@@ -211,37 +307,105 @@ Deno.serve(async (req) => {
       return jsonResponse({ error: "Booking not found", status: "not_found" }, 404);
     }
 
-    if (booking.payment_status !== "paid") {
+    let paymentStatus = booking.payment_status;
+    let yocoVerificationStatus: string | null = null;
+    let yocoVerificationDetail: string | undefined;
+
+    if (paymentStatus !== "paid") {
+      const yocoVerification = await verifyYocoCheckoutPaid(booking.yoco_checkout_id);
+      yocoVerificationStatus = yocoVerification.status;
+      yocoVerificationDetail = yocoVerification.detail;
+
+      if (yocoVerification.paid) {
+        const now = new Date().toISOString();
+        const { error: updatePaidError } = await admin
+          .from("bookings")
+          .update({ payment_status: "paid", updated_at: now })
+          .eq("id", bookingId);
+
+        if (updatePaidError) {
+          return jsonResponse({
+            success: false,
+            status: "paid_update_failed",
+            bookingId,
+            paymentConfirmed: true,
+            detail: updatePaidError.message,
+          }, 500);
+        }
+
+        paymentStatus = "paid";
+        booking.payment_status = "paid";
+      }
+    }
+
+    if (paymentStatus !== "paid") {
       return jsonResponse({
         success: false,
         status: "not_paid",
         bookingId,
-        paymentStatus: booking.payment_status ?? "unpaid",
+        paymentStatus: paymentStatus ?? "unpaid",
+        yocoStatus: yocoVerificationStatus,
+        detail: yocoVerificationDetail,
       });
     }
 
-    if (booking.payment_confirmation_sent_at) {
+    const { data: emailState, error: emailStateError } = await admin
+      .from("bookings")
+      .select("payment_confirmation_sent_at, payment_confirmation_email_ids")
+      .eq("id", bookingId)
+      .maybeSingle();
+
+    if (emailStateError) {
+      console.error("Could not read payment confirmation tracking columns:", emailStateError);
+      return jsonResponse({
+        success: true,
+        status: "paid_tracking_unavailable",
+        bookingId,
+        paymentConfirmed: true,
+        message: "Payment is confirmed, but email tracking columns are not available.",
+      });
+    }
+
+    if (emailState?.payment_confirmation_sent_at) {
       return jsonResponse({
         success: true,
         status: "already_sent",
         bookingId,
-        sentAt: booking.payment_confirmation_sent_at,
-        emailIds: booking.payment_confirmation_email_ids,
+        paymentConfirmed: true,
+        sentAt: emailState.payment_confirmation_sent_at,
+        emailIds: emailState.payment_confirmation_email_ids,
       });
     }
 
-    const currentEmailState = isRecord(booking.payment_confirmation_email_ids)
-      ? booking.payment_confirmation_email_ids
+    const currentEmailState = isRecord(emailState?.payment_confirmation_email_ids)
+      ? emailState.payment_confirmation_email_ids
       : null;
     if (currentEmailState?.status === "sending") {
-      return jsonResponse({ success: true, status: "sending", bookingId }, 202);
+      return jsonResponse({ success: true, status: "sending", bookingId, paymentConfirmed: true }, 202);
     }
     if (currentEmailState) {
       return jsonResponse({
         success: false,
         status: "previous_attempt_exists",
         bookingId,
+        paymentConfirmed: true,
         emailState: currentEmailState,
+      });
+    }
+
+    const apiKey = Deno.env.get("CTSC_RESEND_KEY") ?? Deno.env.get("RESEND_API_KEY");
+    const adminEmails = parseEmailList(
+      Deno.env.get("ADMIN_EMAIL") ?? Deno.env.get("OWNER_EMAIL") ?? "info@ctsctravel.com"
+    );
+
+    if (!apiKey) {
+      console.error("Payment is confirmed but CTSC_RESEND_KEY or RESEND_API_KEY is not set");
+      return jsonResponse({
+        success: false,
+        status: "email_not_configured",
+        bookingId,
+        paymentConfirmed: true,
+        message: "Payment is confirmed, but payment confirmation email is not configured.",
       });
     }
 
@@ -421,6 +585,7 @@ Deno.serve(async (req) => {
         success: true,
         status: "sent",
         bookingId,
+        paymentConfirmed: true,
         customerEmailSent: Boolean(customerEmail),
         adminEmailSent: true,
         emailIds,
@@ -446,8 +611,9 @@ Deno.serve(async (req) => {
         success: false,
         status: "email_failed",
         bookingId,
+        paymentConfirmed: true,
         error: "Payment confirmation email could not be sent automatically",
-      }, 502);
+      });
     }
   } catch (err) {
     const message = err instanceof Error ? err.message : "Unknown error";

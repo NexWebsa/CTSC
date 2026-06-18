@@ -10,6 +10,35 @@ const corsHeaders = {
 const readString = (value: unknown): string | null =>
   typeof value === "string" && value.trim() ? value : null;
 
+const normalizeStatus = (value: unknown): string | null =>
+  readString(value)?.toLowerCase().replace(/[\s_-]+/g, "_") ?? null;
+
+const isPaidStatus = (value: unknown): boolean => {
+  const status = normalizeStatus(value);
+  return Boolean(
+    status &&
+      ["paid", "succeeded", "successful", "success", "complete", "completed", "captured"].includes(status)
+  );
+};
+
+const isSucceededEvent = (event: { type?: unknown; payload?: Record<string, unknown> }) => {
+  const type = normalizeStatus(event.type) ?? "";
+  return (
+    type === "payment_succeeded" ||
+    type === "checkout_succeeded" ||
+    type === "checkout_completed" ||
+    type.includes("succeeded") ||
+    isPaidStatus(event.payload?.status) ||
+    isPaidStatus(event.payload?.paymentStatus) ||
+    isPaidStatus(event.payload?.payment_status)
+  );
+};
+
+const isFailedEvent = (event: { type?: unknown; payload?: Record<string, unknown> }) => {
+  const type = normalizeStatus(event.type) ?? "";
+  return type.includes("failed") || type.includes("cancelled") || type.includes("canceled");
+};
+
 const sendPaymentConfirmation = async (
   supabaseUrl: string,
   serviceRoleKey: string,
@@ -120,7 +149,7 @@ Deno.serve(async (req) => {
     const supabaseKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
     const supabase = createClient(supabaseUrl, supabaseKey);
 
-    if (event.type === "payment.succeeded") {
+    if (isSucceededEvent(event)) {
       const metadata = event.payload?.metadata ?? {};
       const checkout = event.payload?.checkout ?? {};
       const payment = event.payload?.payment ?? {};
@@ -174,9 +203,14 @@ Deno.serve(async (req) => {
       } else {
         console.warn("No bookingId or checkoutId in webhook payload metadata");
       }
-    } else if (event.type === "payment.failed") {
-      const bookingId = event.payload?.metadata?.bookingId;
-      const checkoutId = event.payload?.metadata?.checkoutId;
+    } else if (isFailedEvent(event)) {
+      const metadata = event.payload?.metadata ?? {};
+      const bookingId = readString(metadata.bookingId) ?? readString(metadata.booking_id);
+      const checkoutId =
+        readString(metadata.checkoutId) ??
+        readString(metadata.checkout_id) ??
+        readString(event.payload?.checkoutId) ??
+        readString(event.payload?.checkout_id);
 
       const id = bookingId || null;
       const field = bookingId ? "id" : "yoco_checkout_id";
