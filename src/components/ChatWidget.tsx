@@ -5,9 +5,9 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { supabase, SUPABASE_URL, SUPABASE_ANON_KEY } from "@/lib/supabase";
 
-const WHATSAPP_NUMBER = "27726178577";
+const WHATSAPP_NUMBER = "27837668601";
 const WHATSAPP_URL = `https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(
-  "Hi! I'd like to enquire about Cape Town Shuttle Service.",
+  "Hi! I'd like to enquire about CTSC Travel services. Could you please assist me?",
 )}`;
 
 type Msg = { role: "user" | "assistant"; content: string };
@@ -59,8 +59,8 @@ export default function ChatWidget() {
         body: JSON.stringify({ messages: next }),
       });
 
-      if (resp.status === 429) throw new Error("Too many requests — please wait a moment.");
-      if (resp.status === 402) throw new Error("AI credits exhausted — please contact support.");
+      if (resp.status === 429) throw new Error("Too many requests — please try again tomorrow");
+      if (resp.status === 402) throw new Error("Credit limit reached — please contact support (Whatsapp).");
       if (!resp.ok) throw new Error("Sorry, something went wrong.");
 
       const contentType = resp.headers.get("content-type") ?? "";
