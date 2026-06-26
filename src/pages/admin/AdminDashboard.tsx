@@ -1,8 +1,8 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, type ReactNode } from "react";
 import { motion } from "framer-motion";
 import {
   Car, Users, CalendarCheck, Clock, CheckCircle, XCircle,
-  TrendingUp, Loader2
+  TrendingUp, Loader2, CalendarClock, CreditCard, MapPin, UserRound, type LucideIcon
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/lib/supabase";
@@ -10,6 +10,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useAdminCheck } from "@/hooks/useAdminCheck";
 import { useToast } from "@/hooks/use-toast";
 import { DeleteConfirmButton } from "@/components/admin/DeleteConfirmButton";
+import { sendTripAssignmentEmails } from "@/lib/driverTripAssignmentEmail";
 
 import { formatNotes } from "@/lib/formatNotes";
 
@@ -57,6 +58,48 @@ const statusColors: Record<string, string> = {
   completed: "bg-green-500/10 text-green-600 border-green-500/20",
   cancelled: "bg-destructive/10 text-destructive border-destructive/20",
 };
+
+const bookingReference = (id: string) => id.slice(0, 8).toUpperCase();
+
+const formatMoney = (value: number | null | undefined) =>
+  value != null ? `R${Number(value).toFixed(2)}` : "No estimate";
+
+const paymentStatusClasses = (status: string | null | undefined) => {
+  if (status === "paid") return "bg-green-500/10 text-green-600 border-green-500/20";
+  if (status === "failed") return "bg-destructive/10 text-destructive border-destructive/20";
+  return "bg-yellow-500/10 text-yellow-600 border-yellow-500/20";
+};
+
+const paymentLabel = (status: string | null | undefined) =>
+  status ? status.replace(/_/g, " ") : "unpaid";
+
+const DetailItem = ({
+  icon: Icon,
+  label,
+  value,
+}: {
+  icon: LucideIcon;
+  label: string;
+  value: ReactNode;
+}) => (
+  <div className="min-w-0">
+    <div className="flex items-center gap-1.5 text-[11px] font-semibold uppercase text-muted-foreground">
+      <Icon className="w-3.5 h-3.5 shrink-0" />
+      <span>{label}</span>
+    </div>
+    <div className="mt-1 text-sm font-medium text-foreground break-words">{value || "-"}</div>
+  </div>
+);
+
+const LocationBlock = ({ label, value }: { label: string; value: ReactNode }) => (
+  <div className="min-w-0">
+    <div className="flex items-center gap-1.5 text-[11px] font-semibold uppercase text-muted-foreground">
+      <MapPin className="w-3.5 h-3.5 shrink-0" />
+      <span>{label}</span>
+    </div>
+    <div className="mt-1 text-sm font-semibold text-foreground break-words">{value || "-"}</div>
+  </div>
+);
 
 const AdminDashboard = () => {
   const { user } = useAuth();
@@ -126,12 +169,40 @@ const AdminDashboard = () => {
   };
 
   const assignDriver = async (bookingId: string, driverId: string) => {
+    if (!driverId) return;
+
     setActionLoading(bookingId);
-    const { error } = await supabase.from("bookings").update({
-      driver_id: driverId, status: "driver_assigned", updated_at: new Date().toISOString(),
-    }).eq("id", bookingId);
-    if (error) toast({ title: "Failed to assign driver", description: error.message, variant: "destructive" });
-    setActionLoading(null);
+    try {
+      const { error } = await supabase.from("bookings").update({
+        driver_id: driverId, status: "driver_assigned", updated_at: new Date().toISOString(),
+      }).eq("id", bookingId);
+
+      if (error) {
+        toast({ title: "Failed to assign driver", description: error.message, variant: "destructive" });
+        return;
+      }
+
+      const emailResult = await sendTripAssignmentEmails(bookingId, driverId);
+      const emailFailures = [
+        emailResult.driver.sent ? null : `Driver email: ${emailResult.driver.error}`,
+        emailResult.customer.sent ? null : `Customer email: ${emailResult.customer.error}`,
+      ].filter(Boolean);
+
+      if (emailFailures.length) {
+        console.error("Trip assignment email failure", { bookingId, driverId, emailResult });
+        toast({
+          title: "Driver assigned, some emails not sent",
+          description: emailFailures.join(" | "),
+          variant: "destructive",
+        });
+      } else {
+        toast({ title: "Driver assigned", description: "Trip details emailed to the driver and customer." });
+      }
+
+      await fetchData();
+    } finally {
+      setActionLoading(null);
+    }
   };
 
   const deleteBooking = async (booking: Booking) => {
@@ -229,36 +300,62 @@ const AdminDashboard = () => {
                     transition={{ delay: i * 0.03 }}
                     className="rounded-2xl bg-card border border-border/50 p-4 sm:p-5 hover:border-border transition-colors"
                   >
+                    <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-2 mb-3">
+                      <div>
+                        <p className="text-[11px] font-semibold uppercase text-muted-foreground">Booking reference</p>
+                        <p className="font-mono text-sm font-bold text-foreground">#{bookingReference(booking.id)}</p>
+                      </div>
+                      <div className="sm:text-right">
+                        <p className="text-[11px] font-semibold uppercase text-muted-foreground">Total</p>
+                        <p className="text-lg font-bold text-accent">{formatMoney(booking.price_estimate)}</p>
+                      </div>
+                    </div>
+
                     {/* Top row: status + service type */}
-                    <div className="flex items-center gap-2 flex-wrap mb-2">
+                    <div className="flex items-center gap-2 flex-wrap border-b border-border/60 pb-3 mb-4">
                       <span className={`px-2.5 py-0.5 rounded-full text-xs font-medium capitalize border ${statusColors[booking.status] || ""}`}>
                         {booking.status.replace(/_/g, " ")}
                       </span>
                       <span className="text-xs text-muted-foreground capitalize">{booking.service_type.replace(/_/g, " ")}</span>
                       {booking.price_estimate && (
-                        <span className="ml-auto text-sm font-bold text-accent">R{booking.price_estimate}</span>
+                        <span className="hidden">R{booking.price_estimate}</span>
                       )}
                       {booking.payment_status && (
-                        <span className={`px-2 py-0.5 rounded-full text-xs font-medium border ${
-                          booking.payment_status === "paid"
-                            ? "bg-green-500/10 text-green-600 border-green-500/20"
-                            : booking.payment_status === "failed"
-                            ? "bg-destructive/10 text-destructive border-destructive/20"
-                            : "bg-yellow-500/10 text-yellow-600 border-yellow-500/20"
-                        }`}>
+                        <span className="hidden">
                           {booking.payment_status === "paid" ? "💳 Paid" : booking.payment_status === "failed" ? "💳 Failed" : "💳 Unpaid"}
                         </span>
                       )}
                     </div>
 
                     {/* Route */}
-                    <p className="text-sm font-medium text-foreground mb-1 break-words">
+                    <div className="grid gap-3 sm:grid-cols-2 border-b border-border/60 pb-4 mb-4">
+                      <LocationBlock label="Pickup" value={booking.pickup_location} />
+                      <LocationBlock label="Drop-off" value={booking.dropoff_location || "Not specified"} />
+                    </div>
+
+                    <p className="hidden">
                       {booking.pickup_location}
                       {booking.dropoff_location && <span className="text-muted-foreground"> → {booking.dropoff_location}</span>}
                     </p>
 
                     {/* Meta */}
-                    <div className="flex items-center gap-3 text-xs text-muted-foreground flex-wrap mb-3">
+                    <div className="grid gap-3 border-b border-border/60 pb-4 mb-4 sm:grid-cols-2 lg:grid-cols-5">
+                      <DetailItem icon={CalendarClock} label="Pickup time" value={`${booking.pickup_date} at ${booking.pickup_time}`} />
+                      <DetailItem icon={UserRound} label="Customer" value={booking.customer_name || "Unknown"} />
+                      <DetailItem icon={Car} label="Vehicle" value={booking.vehicles?.name || "Not assigned"} />
+                      <DetailItem icon={UserRound} label="Driver" value={booking.drivers?.full_name || "Not assigned"} />
+                      <DetailItem
+                        icon={CreditCard}
+                        label="Payment"
+                        value={
+                          <span className={`inline-flex px-2 py-0.5 rounded-full text-xs font-medium capitalize border ${paymentStatusClasses(booking.payment_status)}`}>
+                            {paymentLabel(booking.payment_status)}
+                          </span>
+                        }
+                      />
+                    </div>
+
+                    <div className="hidden">
                       <span>{booking.pickup_date} at {booking.pickup_time}</span>
                       <span>Customer: {booking.customer_name}</span>
                       {booking.vehicles?.name && <span>Vehicle: {booking.vehicles.name}</span>}
@@ -267,11 +364,12 @@ const AdminDashboard = () => {
 
                     {booking.notes && (() => {
                       const display = formatNotes(booking.notes);
-                      return display ? <p className="text-xs text-muted-foreground italic mb-3 break-words">Note: {display}</p> : null;
+                      return display ? <p className="border-b border-border/60 pb-4 mb-4 text-xs text-muted-foreground italic break-words">Note: {display}</p> : null;
                     })()}
 
                     {/* Actions */}
                     <div className="flex items-center gap-2 flex-wrap">
+                      <div className="w-full text-[11px] font-semibold uppercase text-muted-foreground">Dispatch controls</div>
                       {["pending", "approved"].includes(booking.status) && (
                         <select
                           className="text-xs rounded-xl border border-border bg-secondary/50 px-3 py-1.5 text-foreground max-w-[160px]"

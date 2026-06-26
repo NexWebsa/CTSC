@@ -25,10 +25,25 @@ interface BookingRow {
   dropoff_location: string | null;
   pickup_date: string | null;
   pickup_time: string | null;
+  return_pickup_date: string | null;
+  return_pickup_time: string | null;
+  trip_direction: string | null;
   status: string | null;
   price_estimate: number | null;
   notes: string | null;
   passengers: number | null;
+  baby_seats: number | null;
+  luggage_checkin: number | null;
+  luggage_carry: number | null;
+  trailer: boolean | null;
+  oversize_luggage: boolean | null;
+  flight_number: string | null;
+  extra_stop: boolean | null;
+  extra_stop_location: string | null;
+  extras: unknown;
+  extras_total: number | null;
+  distance_km: number | null;
+  duration_minutes: number | null;
   payment_status: string | null;
   yoco_checkout_id: string | null;
   created_at: string | null;
@@ -77,11 +92,89 @@ const titleCase = (s: string | null | undefined): string => {
     .join(" ");
 };
 
+const formatDate = (value: string | null | undefined): string => {
+  if (!value) return "-";
+  const match = value.match(/^(\d{4})-(\d{2})-(\d{2})$/);
+  if (!match) return value;
+
+  const [, year, month, day] = match;
+  const date = new Date(Date.UTC(Number(year), Number(month) - 1, Number(day)));
+  return new Intl.DateTimeFormat("en-ZA", {
+    weekday: "short",
+    day: "2-digit",
+    month: "short",
+    year: "numeric",
+    timeZone: "UTC",
+  }).format(date);
+};
+
+const formatTime = (value: string | null | undefined): string => {
+  if (!value) return "-";
+  return value.length >= 5 ? value.slice(0, 5) : value;
+};
+
+const formatDuration = (minutes: number | null | undefined): string | null => {
+  if (typeof minutes !== "number" || Number.isNaN(minutes) || minutes <= 0) return null;
+  if (minutes < 60) return `${Math.round(minutes)} min`;
+
+  const hours = Math.floor(minutes / 60);
+  const remaining = Math.round(minutes % 60);
+  return remaining ? `${hours}h ${remaining}m` : `${hours}h`;
+};
+
+const formatKm = (km: number | null | undefined): string | null =>
+  typeof km === "number" && !Number.isNaN(km) && km > 0 ? `${km.toFixed(1)} km` : null;
+
 const extractFromNotes = (notes: string | null, label: string): string | null => {
   if (!notes) return null;
   const re = new RegExp(`${label}:\\s*([^|]+?)(?:\\s*\\||$)`, "i");
   const match = notes.match(re);
   return match ? match[1].trim() : null;
+};
+
+const parseReturnTrip = (notes: string | null) => {
+  const value = extractFromNotes(notes, "Return trip");
+  if (!value) return null;
+
+  const match = value.match(/^(.+?)\s*(?:\u2192|->)\s*(.+?)\s+on\s+(.+?)\s+at\s+(.+)$/i);
+  if (!match) return null;
+
+  return {
+    pickup: match[1].trim(),
+    dropoff: match[2].trim(),
+    date: match[3].trim(),
+    time: match[4].trim(),
+  };
+};
+
+const summarizeExtras = (extras: unknown): string | null => {
+  if (!Array.isArray(extras)) return null;
+
+  const labels = extras
+    .map((item) => {
+      if (!isRecord(item)) return null;
+      const label = readString(item.label);
+      if (!label) return null;
+      const qty = typeof item.qty === "number" ? item.qty : 1;
+      return qty > 1 ? `${label} x${qty}` : label;
+    })
+    .filter((value): value is string => Boolean(value));
+
+  return labels.length ? labels.join(", ") : null;
+};
+
+const cleanAdditionalNotes = (notes: string | null): string | null => {
+  if (!notes) return null;
+
+  const structuredLabels = /^(Service|Airport transfer|Airport|Flight|Passengers|Large bags|Check-in bags|Carry-on|End time|Points of interest|Extras|Extra stop|Return trip):/i;
+  const cleaned = notes
+    .split("|")
+    .map((part) => part.trim())
+    .filter(Boolean)
+    .filter((part) => !structuredLabels.test(part))
+    .join(" | ");
+
+  return cleaned || null;
 };
 
 const parseEmailList = (value: string | undefined): string[] =>
@@ -297,7 +390,7 @@ Deno.serve(async (req) => {
     const { data: booking, error: bookingError } = await admin
       .from("bookings")
       .select(
-        "id, user_id, is_guest, guest_name, guest_email, guest_phone, vehicle_id, service_type, booking_type, pickup_location, dropoff_location, pickup_date, pickup_time, status, price_estimate, notes, passengers, payment_status, yoco_checkout_id, created_at, vehicles(name, capacity)"
+        "id, user_id, is_guest, guest_name, guest_email, guest_phone, vehicle_id, service_type, booking_type, pickup_location, dropoff_location, pickup_date, pickup_time, return_pickup_date, return_pickup_time, trip_direction, status, price_estimate, notes, passengers, baby_seats, luggage_checkin, luggage_carry, trailer, oversize_luggage, flight_number, extra_stop, extra_stop_location, extras, extras_total, distance_km, duration_minutes, payment_status, yoco_checkout_id, created_at, vehicles(name, capacity)"
       )
       .eq("id", bookingId)
       .maybeSingle<BookingRow>();
@@ -484,28 +577,72 @@ Deno.serve(async (req) => {
     const reference = orderNumber(booking.id);
     const passengers =
       booking.passengers?.toString() ?? extractFromNotes(booking.notes, "Passengers") ?? "1";
-    const flightNumber = extractFromNotes(booking.notes, "Flight");
+    const flightNumber = booking.flight_number ?? extractFromNotes(booking.notes, "Flight");
     const yocoReference = booking.yoco_checkout_id ?? "-";
+    const returnFromNotes = parseReturnTrip(booking.notes);
+    const hasReturn = booking.trip_direction === "return" || Boolean(returnFromNotes);
+    const returnPickup = returnFromNotes?.pickup ?? booking.dropoff_location;
+    const returnDropoff = returnFromNotes?.dropoff ?? booking.pickup_location;
+    const returnDate = returnFromNotes?.date ?? booking.return_pickup_date;
+    const returnTime = returnFromNotes?.time ?? booking.return_pickup_time;
+    const tripDirection = hasReturn ? "Return trip" : "One-way";
+    const luggageSummary = [
+      booking.luggage_checkin ? `Check-in bags: ${booking.luggage_checkin}` : null,
+      booking.luggage_carry ? `Carry-on: ${booking.luggage_carry}` : null,
+      booking.oversize_luggage ? "Oversize luggage" : null,
+      booking.trailer ? "Trailer required" : null,
+    ]
+      .filter(Boolean)
+      .join(", ");
+    const equipmentSummary = [
+      booking.baby_seats ? `Baby seats: ${booking.baby_seats}` : null,
+      booking.extra_stop
+        ? `Extra stop: ${booking.extra_stop_location || "location not specified"}`
+        : null,
+    ]
+      .filter(Boolean)
+      .join(", ");
+    const extrasSummary = summarizeExtras(booking.extras) ?? extractFromNotes(booking.notes, "Extras");
+    const extrasCost =
+      typeof booking.extras_total === "number" && booking.extras_total > 0
+        ? formatRand(booking.extras_total)
+        : null;
+    const routeSummary = [formatKm(booking.distance_km), formatDuration(booking.duration_minutes)]
+      .filter(Boolean)
+      .join(" / ");
+    const additionalNotes = cleanAdditionalNotes(booking.notes);
 
     const commonRows: Array<[string, string | null | undefined]> = [
       ["Booking reference", reference],
       ["Customer name", fullName],
       ["Service type", titleCase(booking.service_type)],
+      ["Trip direction", tripDirection],
       ["Pickup location", booking.pickup_location ?? "-"],
       ["Drop-off location", booking.dropoff_location],
-      ["Date", booking.pickup_date ?? "-"],
-      ["Time", booking.pickup_time ?? "-"],
+      ["Pickup date", formatDate(booking.pickup_date)],
+      ["Pickup time", formatTime(booking.pickup_time)],
+      ["Return pickup", hasReturn ? returnPickup : null],
+      ["Return drop-off", hasReturn ? returnDropoff : null],
+      ["Return date", hasReturn ? formatDate(returnDate) : null],
+      ["Return time", hasReturn ? formatTime(returnTime) : null],
       ["Vehicle", vehicleName],
       ["Passenger count", passengers],
+      ["Flight number", flightNumber],
+      ["Luggage", luggageSummary],
+      ["Equipment and stops", equipmentSummary],
+      ["Extras", extrasSummary],
+      ["Extras total", extrasCost],
+      ["Route estimate", routeSummary],
       ["Amount paid", amountPaid],
       ["Payment status", "Paid"],
+      ["Additional notes", additionalNotes],
     ];
 
     const customerHtml = renderEmailShell(
       "Payment Confirmed",
-      `Hi ${firstName(fullName)}, thank you. We have received payment for your CTSC Travel booking. The CTSC Travel team has also been notified.`,
+      `Hi ${firstName(fullName)}, thank you. We have received payment for your CTSC Travel booking. Here are the full trip details we have on file.`,
       renderRows(commonRows),
-      "We will be in touch shortly with any final trip details. Thank you for choosing CTSC Travel."
+      "We will be in touch with your assigned driver details once dispatch has allocated your trip. If any detail above looks incorrect, please contact CTSC Travel."
     );
 
     const adminRows: Array<[string, string | null | undefined]> = [
@@ -514,21 +651,32 @@ Deno.serve(async (req) => {
       ["Customer email", customerEmail ?? "-"],
       ["Customer phone", phone],
       ["Service type", titleCase(booking.service_type)],
+      ["Trip direction", tripDirection],
       ["Pickup location", booking.pickup_location ?? "-"],
       ["Drop-off location", booking.dropoff_location],
-      ["Date/time", `${booking.pickup_date ?? "-"} ${booking.pickup_time ?? ""}`.trim()],
+      ["Pickup date/time", `${formatDate(booking.pickup_date)} ${formatTime(booking.pickup_time)}`.trim()],
+      ["Return pickup", hasReturn ? returnPickup : null],
+      ["Return drop-off", hasReturn ? returnDropoff : null],
+      ["Return date/time", hasReturn ? `${formatDate(returnDate)} ${formatTime(returnTime)}`.trim() : null],
       ["Vehicle", vehicleName],
       ["Passenger count", passengers],
+      ["Flight number", flightNumber],
+      ["Luggage", luggageSummary],
+      ["Equipment and stops", equipmentSummary],
+      ["Extras", extrasSummary],
+      ["Extras total", extrasCost],
+      ["Route estimate", routeSummary],
       ["Amount paid", amountPaid],
       ["Yoco/payment reference", yocoReference],
       ["Payment status", "Paid"],
-      ["Flight number", flightNumber],
+      ["Booking status", titleCase(booking.status)],
+      ["Additional notes", additionalNotes],
       ["Booking ID", booking.id],
     ];
 
     const adminHtml = renderEmailShell(
       "Payment Received",
-      `A payment has been received for booking #${reference}. The booking is marked as paid in Supabase.`,
+      `A payment has been received for booking #${reference}. The booking is marked as paid in Supabase; use the details below for dispatch and driver assignment.`,
       renderRows(adminRows),
       "Please review the admin dashboard for driver assignment and operational follow-up."
     );
