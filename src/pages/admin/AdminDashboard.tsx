@@ -12,11 +12,11 @@ import { useToast } from "@/hooks/use-toast";
 import { DeleteConfirmButton } from "@/components/admin/DeleteConfirmButton";
 import { sendTripAssignmentEmails } from "@/lib/driverTripAssignmentEmail";
 
-import { formatNotes } from "@/lib/formatNotes";
+import { formatNoteItems } from "@/lib/formatNotes";
 
 interface Booking {
   id: string;
-  user_id: string;
+  user_id: string | null;
   vehicle_id: string | null;
   driver_id: string | null;
   service_type: string;
@@ -30,11 +30,17 @@ interface Booking {
   price_estimate: number | null;
   payment_status: string | null;
   notes: string | null;
+  is_guest?: boolean | null;
+  guest_name?: string | null;
+  guest_email?: string | null;
+  guest_phone?: string | null;
   created_at: string;
   updated_at: string;
   vehicles?: { name: string } | null;
   drivers?: { full_name: string } | null;
   customer_name?: string;
+  customer_email?: string;
+  customer_phone?: string;
 }
 
 interface Driver {
@@ -46,6 +52,7 @@ interface Driver {
 interface Profile {
   id: string;
   full_name: string | null;
+  phone?: string | null;
 }
 
 const statusColors: Record<string, string> = {
@@ -101,6 +108,27 @@ const LocationBlock = ({ label, value }: { label: string; value: ReactNode }) =>
   </div>
 );
 
+const NotesBlock = ({ notes }: { notes: string | null }) => {
+  const items = formatNoteItems(notes);
+  if (!items.length) return null;
+
+  return (
+    <div className="border-b border-border/60 pb-4 mb-4">
+      <div className="rounded-xl border border-border/60 bg-secondary/20 p-3">
+        <div className="text-[11px] font-semibold uppercase text-muted-foreground mb-2">Notes</div>
+        <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
+          {items.map((item, index) => (
+            <div key={`${item.label}-${index}`} className="min-w-0 rounded-lg bg-background/60 px-3 py-2">
+              <div className="text-[10px] font-semibold uppercase text-muted-foreground">{item.label}</div>
+              <div className="mt-0.5 text-xs font-medium text-foreground break-words">{item.value}</div>
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+};
+
 const AdminDashboard = () => {
   const { user } = useAuth();
   const { isAdmin } = useAdminCheck();
@@ -136,16 +164,22 @@ const AdminDashboard = () => {
     const [bookingsRes, driversRes, profilesRes] = await Promise.all([
       supabase
         .from("bookings")
-        .select("id, user_id, vehicle_id, driver_id, service_type, booking_type, pickup_location, dropoff_location, hours, pickup_date, pickup_time, status, price_estimate, payment_status, notes, created_at, updated_at, vehicles:vehicle_id(name), drivers:driver_id(full_name)")
+        .select("id, user_id, vehicle_id, driver_id, service_type, booking_type, pickup_location, dropoff_location, hours, pickup_date, pickup_time, status, price_estimate, payment_status, notes, is_guest, guest_name, guest_email, guest_phone, created_at, updated_at, vehicles:vehicle_id(name), drivers:driver_id(full_name)")
         .order("created_at", { ascending: false }),
       supabase.from("drivers").select("*").eq("is_active", true),
-      supabase.from("profiles").select("id, full_name"),
+      supabase.from("profiles").select("id, full_name, phone"),
     ]);
-    const profileMap = new Map<string, string>();
-    (profilesRes.data as Profile[] || []).forEach(p => { if (p.full_name) profileMap.set(p.id, p.full_name); });
-    const enrichedBookings = ((bookingsRes.data as unknown as Booking[]) || []).map(b => ({
-      ...b, customer_name: profileMap.get(b.user_id) || "Unknown",
-    }));
+    const profileMap = new Map<string, { name: string; email: string; phone: string }>();
+    (profilesRes.data as Profile[] || []).forEach(p => {
+      profileMap.set(p.id, { name: p.full_name || "Unknown", email: "", phone: p.phone || "" });
+    });
+    const enrichedBookings = ((bookingsRes.data as unknown as Booking[]) || []).map(b => {
+      if (b.is_guest) {
+        return { ...b, customer_name: b.guest_name || "Guest", customer_email: b.guest_email || "", customer_phone: b.guest_phone || "" };
+      }
+      const p = b.user_id ? profileMap.get(b.user_id) : undefined;
+      return { ...b, customer_name: p?.name || "Unknown", customer_email: p?.email || "", customer_phone: p?.phone || "" };
+    });
     setBookings(enrichedBookings);
     setDrivers((driversRes.data as Driver[]) || []);
     setLoading(false);
@@ -168,13 +202,21 @@ const AdminDashboard = () => {
     setActionLoading(null);
   };
 
-  const assignDriver = async (bookingId: string, driverId: string) => {
+  const assignDriver = async (booking: Booking, driverId: string) => {
     if (!driverId) return;
+    if (booking.driver_id === driverId) {
+      toast({ title: "Driver unchanged", description: "This booking is already assigned to that driver." });
+      return;
+    }
+
+    const bookingId = booking.id;
+    const isReassignment = Boolean(booking.driver_id);
+    const nextStatus = ["pending", "approved"].includes(booking.status) ? "driver_assigned" : booking.status;
 
     setActionLoading(bookingId);
     try {
       const { error } = await supabase.from("bookings").update({
-        driver_id: driverId, status: "driver_assigned", updated_at: new Date().toISOString(),
+        driver_id: driverId, status: nextStatus, updated_at: new Date().toISOString(),
       }).eq("id", bookingId);
 
       if (error) {
@@ -182,21 +224,26 @@ const AdminDashboard = () => {
         return;
       }
 
-      const emailResult = await sendTripAssignmentEmails(bookingId, driverId);
+      const emailResult = await sendTripAssignmentEmails(bookingId, driverId, { isReassignment });
       const emailFailures = [
         emailResult.driver.sent ? null : `Driver email: ${emailResult.driver.error}`,
         emailResult.customer.sent ? null : `Customer email: ${emailResult.customer.error}`,
       ].filter(Boolean);
 
       if (emailFailures.length) {
-        console.error("Trip assignment email failure", { bookingId, driverId, emailResult });
+        console.error("Trip assignment email failure", { bookingId, driverId, isReassignment, emailResult });
         toast({
-          title: "Driver assigned, some emails not sent",
+          title: `${isReassignment ? "Driver reassigned" : "Driver assigned"}, some emails not sent`,
           description: emailFailures.join(" | "),
           variant: "destructive",
         });
       } else {
-        toast({ title: "Driver assigned", description: "Trip details emailed to the driver and customer." });
+        toast({
+          title: isReassignment ? "Driver reassigned" : "Driver assigned",
+          description: isReassignment
+            ? "Updated trip details emailed to the new driver and customer."
+            : "Trip details emailed to the driver and customer.",
+        });
       }
 
       await fetchData();
@@ -335,13 +382,24 @@ const AdminDashboard = () => {
 
                     <p className="hidden">
                       {booking.pickup_location}
-                      {booking.dropoff_location && <span className="text-muted-foreground"> → {booking.dropoff_location}</span>}
+                      {booking.dropoff_location && <span className="text-muted-foreground">{" -> "}{booking.dropoff_location}</span>}
                     </p>
 
                     {/* Meta */}
                     <div className="grid gap-3 border-b border-border/60 pb-4 mb-4 sm:grid-cols-2 lg:grid-cols-5">
                       <DetailItem icon={CalendarClock} label="Pickup time" value={`${booking.pickup_date} at ${booking.pickup_time}`} />
-                      <DetailItem icon={UserRound} label="Customer" value={booking.customer_name || "Unknown"} />
+                      <DetailItem
+                        icon={UserRound}
+                        label={booking.is_guest ? "Guest" : "Customer"}
+                        value={
+                          <>
+                            {booking.customer_name || "Unknown"}
+                            {booking.customer_phone && (
+                              <span className="block text-xs font-normal text-muted-foreground">{booking.customer_phone}</span>
+                            )}
+                          </>
+                        }
+                      />
                       <DetailItem icon={Car} label="Vehicle" value={booking.vehicles?.name || "Not assigned"} />
                       <DetailItem icon={UserRound} label="Driver" value={booking.drivers?.full_name || "Not assigned"} />
                       <DetailItem
@@ -357,27 +415,25 @@ const AdminDashboard = () => {
 
                     <div className="hidden">
                       <span>{booking.pickup_date} at {booking.pickup_time}</span>
-                      <span>Customer: {booking.customer_name}</span>
+                      <span>{booking.is_guest ? "Guest" : "Customer"}: {booking.customer_name}</span>
+                      {booking.customer_phone && <span className="ml-1">- {booking.customer_phone}</span>}
                       {booking.vehicles?.name && <span>Vehicle: {booking.vehicles.name}</span>}
                       {booking.drivers?.full_name && <span>Driver: {booking.drivers.full_name}</span>}
                     </div>
 
-                    {booking.notes && (() => {
-                      const display = formatNotes(booking.notes);
-                      return display ? <p className="border-b border-border/60 pb-4 mb-4 text-xs text-muted-foreground italic break-words">Note: {display}</p> : null;
-                    })()}
+                    <NotesBlock notes={booking.notes} />
 
                     {/* Actions */}
                     <div className="flex items-center gap-2 flex-wrap">
                       <div className="w-full text-[11px] font-semibold uppercase text-muted-foreground">Dispatch controls</div>
-                      {["pending", "approved"].includes(booking.status) && (
+                      {!["cancelled", "completed"].includes(booking.status) && (
                         <select
                           className="text-xs rounded-xl border border-border bg-secondary/50 px-3 py-1.5 text-foreground max-w-[160px]"
                           value={booking.driver_id || ""}
-                          onChange={(e) => assignDriver(booking.id, e.target.value)}
+                          onChange={(e) => assignDriver(booking, e.target.value)}
                           disabled={isActioning}
                         >
-                          <option value="">Assign Driver</option>
+                          <option value="">{booking.driver_id ? "Reassign Driver" : "Assign Driver"}</option>
                           {drivers.map((d) => (
                             <option key={d.id} value={d.id}>{d.full_name}</option>
                           ))}

@@ -29,6 +29,10 @@ export type TripAssignmentEmailsResult = {
   customer: TripAssignmentEmailOutcome;
 };
 
+export type TripAssignmentEmailOptions = {
+  isReassignment?: boolean;
+};
+
 const getFunctionErrorMessage = async (error: unknown, response?: Response) => {
   const fallback = error instanceof Error && error.message ? error.message : "Something went wrong";
   const context =
@@ -60,13 +64,14 @@ const getFunctionErrorMessage = async (error: unknown, response?: Response) => {
 const invokeTripAssignmentEmail = async (
   functionName: "send-driver-trip-assignment" | "send-user-trip-assignment",
   bookingId: string,
-  driverId: string
+  driverId: string,
+  options: TripAssignmentEmailOptions = {}
 ): Promise<TripAssignmentEmailResult> => {
   const { data, error, response } =
     await supabase.functions.invoke<TripAssignmentEmailResult>(
       functionName,
       {
-        body: { bookingId, driverId },
+        body: { bookingId, driverId, isReassignment: options.isReassignment === true },
       }
     );
 
@@ -96,23 +101,26 @@ const settleTripEmail = async (
 
 export const sendDriverTripAssignmentEmail = async (
   bookingId: string,
-  driverId: string
+  driverId: string,
+  options?: TripAssignmentEmailOptions
 ): Promise<TripAssignmentEmailResult> =>
-  invokeTripAssignmentEmail("send-driver-trip-assignment", bookingId, driverId);
+  invokeTripAssignmentEmail("send-driver-trip-assignment", bookingId, driverId, options);
 
 export const sendUserTripAssignmentEmail = async (
   bookingId: string,
-  driverId: string
+  driverId: string,
+  options?: TripAssignmentEmailOptions
 ): Promise<TripAssignmentEmailResult> =>
-  invokeTripAssignmentEmail("send-user-trip-assignment", bookingId, driverId);
+  invokeTripAssignmentEmail("send-user-trip-assignment", bookingId, driverId, options);
 
 export const sendTripAssignmentEmails = async (
   bookingId: string,
-  driverId: string
+  driverId: string,
+  options?: TripAssignmentEmailOptions
 ): Promise<TripAssignmentEmailsResult> => {
   const [driver, customer] = await Promise.all([
-    settleTripEmail(sendDriverTripAssignmentEmail(bookingId, driverId)),
-    settleTripEmail(sendUserTripAssignmentEmail(bookingId, driverId)),
+    settleTripEmail(sendDriverTripAssignmentEmail(bookingId, driverId, options)),
+    settleTripEmail(sendUserTripAssignmentEmail(bookingId, driverId, options)),
   ]);
 
   return { driver, customer };

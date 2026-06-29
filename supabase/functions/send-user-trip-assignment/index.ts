@@ -17,6 +17,7 @@ type EmailRecipient = string | string[];
 interface RequestBody {
   bookingId?: string;
   driverId?: string;
+  isReassignment?: boolean;
 }
 
 interface BookingRow {
@@ -338,6 +339,7 @@ Deno.serve(async (req) => {
     const body: RequestBody = await req.json().catch(() => ({}));
     const bookingId = readString(body.bookingId);
     const driverId = readString(body.driverId);
+    const isReassignment = body.isReassignment === true;
 
     if (!bookingId) return jsonResponse({ error: "bookingId is required" }, 400);
     if (!driverId) return jsonResponse({ error: "driverId is required" }, 400);
@@ -459,15 +461,17 @@ Deno.serve(async (req) => {
       ["Additional notes", additionalNotes],
     ];
 
-    const title = "Your Driver Has Been Assigned";
-    const intro = `Hi ${firstName(customerName)}, ${driver.full_name} has been assigned as your driver for booking #${reference}.`;
+    const title = isReassignment ? "Your Driver Has Been Reassigned" : "Your Driver Has Been Assigned";
+    const intro = isReassignment
+      ? `Hi ${firstName(customerName)}, your driver for booking #${reference} has been updated to ${driver.full_name}.`
+      : `Hi ${firstName(customerName)}, ${driver.full_name} has been assigned as your driver for booking #${reference}.`;
     const html = renderEmailShell(title, intro, renderRows(rows), dashboardUrl);
     const text = renderText(title, intro, rows, dashboardUrl);
 
     const resend = await sendEmail(
       apiKey,
       customerEmail,
-      `Driver Assigned - CTSC Travel Booking #${reference}`,
+      `${isReassignment ? "Driver Reassigned" : "Driver Assigned"} - CTSC Travel Booking #${reference}`,
       html,
       text
     );
@@ -477,6 +481,7 @@ Deno.serve(async (req) => {
       status: "sent",
       bookingId,
       driverId,
+      isReassignment,
       to: customerEmail,
       customerPhone,
       emailId: emailIdFromResponse(resend),

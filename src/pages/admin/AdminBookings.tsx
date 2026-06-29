@@ -9,7 +9,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { supabase } from "@/lib/supabase";
 import { useAdminCheck } from "@/hooks/useAdminCheck";
-import { formatNotes } from "@/lib/formatNotes";
+import { formatNoteItems } from "@/lib/formatNotes";
 import { sendTripAssignmentEmails } from "@/lib/driverTripAssignmentEmail";
 import { useToast } from "@/hooks/use-toast";
 import { DeleteConfirmButton } from "@/components/admin/DeleteConfirmButton";
@@ -122,6 +122,25 @@ const LocationBlock = ({ label, value }: { label: string; value: ReactNode }) =>
   </div>
 );
 
+const NotesBlock = ({ notes }: { notes: string | null }) => {
+  const items = formatNoteItems(notes);
+  if (!items.length) return null;
+
+  return (
+    <div className="sm:col-span-2 lg:col-span-3 rounded-xl border border-border/60 bg-secondary/20 p-3">
+      <div className="text-[11px] font-semibold uppercase text-muted-foreground mb-2">Notes</div>
+      <div className="grid gap-2 sm:grid-cols-2">
+        {items.map((item, index) => (
+          <div key={`${item.label}-${index}`} className="min-w-0 rounded-lg bg-background/60 px-3 py-2">
+            <div className="text-[10px] font-semibold uppercase text-muted-foreground">{item.label}</div>
+            <div className="mt-0.5 text-xs font-medium text-foreground break-words">{item.value}</div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+};
+
 const AdminBookings = () => {
   const { isAdmin } = useAdminCheck();
   const { toast } = useToast();
@@ -183,14 +202,22 @@ const AdminBookings = () => {
     setActionLoading(null);
   };
 
-  const assignDriver = async (bookingId: string, driverId: string) => {
+  const assignDriver = async (booking: Booking, driverId: string) => {
     if (!driverId) return;
+    if (booking.driver_id === driverId) {
+      toast({ title: "Driver unchanged", description: "This booking is already assigned to that driver." });
+      return;
+    }
+
+    const bookingId = booking.id;
+    const isReassignment = Boolean(booking.driver_id);
+    const nextStatus = ["pending", "approved"].includes(booking.status) ? "driver_assigned" : booking.status;
 
     setActionLoading(bookingId);
     try {
       const { error } = await supabase.from("bookings").update({
         driver_id: driverId,
-        status: "driver_assigned",
+        status: nextStatus,
         updated_at: new Date().toISOString(),
       }).eq("id", bookingId);
 
@@ -199,21 +226,26 @@ const AdminBookings = () => {
         return;
       }
 
-      const emailResult = await sendTripAssignmentEmails(bookingId, driverId);
+      const emailResult = await sendTripAssignmentEmails(bookingId, driverId, { isReassignment });
       const emailFailures = [
         emailResult.driver.sent ? null : `Driver email: ${emailResult.driver.error}`,
         emailResult.customer.sent ? null : `Customer email: ${emailResult.customer.error}`,
       ].filter(Boolean);
 
       if (emailFailures.length) {
-        console.error("Trip assignment email failure", { bookingId, driverId, emailResult });
+        console.error("Trip assignment email failure", { bookingId, driverId, isReassignment, emailResult });
         toast({
-          title: "Driver assigned, some emails not sent",
+          title: `${isReassignment ? "Driver reassigned" : "Driver assigned"}, some emails not sent`,
           description: emailFailures.join(" | "),
           variant: "destructive",
         });
       } else {
-        toast({ title: "Driver assigned", description: "Trip details emailed to the driver and customer." });
+        toast({
+          title: isReassignment ? "Driver reassigned" : "Driver assigned",
+          description: isReassignment
+            ? "Updated trip details emailed to the new driver and customer."
+            : "Trip details emailed to the driver and customer.",
+        });
       }
 
       await fetchData();
@@ -446,7 +478,7 @@ const AdminBookings = () => {
 
                 <p className="hidden">
                   {booking.pickup_location}
-                  {booking.dropoff_location && <span className="text-muted-foreground"> → {booking.dropoff_location}</span>}
+                  {booking.dropoff_location && <span className="text-muted-foreground">{" -> "}{booking.dropoff_location}</span>}
                 </p>
 
                 <div className="grid gap-3 border-b border-border/60 pb-4 mb-4 sm:grid-cols-2 lg:grid-cols-5">
@@ -480,7 +512,7 @@ const AdminBookings = () => {
                   <span>{booking.pickup_date} at {booking.pickup_time}</span>
                   <span>
                     {booking.is_guest ? "Guest" : "Customer"}: {booking.customer_name}
-                    {booking.customer_phone && <span className="ml-1">· {booking.customer_phone}</span>}
+                    {booking.customer_phone && <span className="ml-1">- {booking.customer_phone}</span>}
                   </span>
                   {booking.vehicles?.name && <span>Vehicle: {booking.vehicles.name}</span>}
                   {booking.drivers?.full_name && <span>Driver: {booking.drivers.full_name}</span>}
@@ -511,23 +543,20 @@ const AdminBookings = () => {
                     {booking.extras_total != null && Number(booking.extras_total) > 0 && (
                       <div><span className="text-muted-foreground">Extras total:</span> R{booking.extras_total}</div>
                     )}
-                    {booking.notes && (() => {
-                      const display = formatNotes(booking.notes);
-                      return display ? <div className="break-words"><span className="text-muted-foreground">Notes:</span> {display}</div> : null;
-                    })()}
+                    <NotesBlock notes={booking.notes} />
                   </div>
                 )}
 
                 <div className="flex items-center gap-2 flex-wrap">
                   <div className="w-full text-[11px] font-semibold uppercase text-muted-foreground">Dispatch controls</div>
-                  {["pending", "approved"].includes(booking.status) && (
+                  {!["cancelled", "completed"].includes(booking.status) && (
                     <select
                       className="text-xs rounded-xl border border-border bg-secondary/50 px-3 py-1.5 text-foreground max-w-[180px]"
                       value={booking.driver_id || ""}
-                      onChange={(e) => assignDriver(booking.id, e.target.value)}
+                      onChange={(e) => assignDriver(booking, e.target.value)}
                       disabled={isActioning}
                     >
-                      <option value="">Assign Driver</option>
+                      <option value="">{booking.driver_id ? "Reassign Driver" : "Assign Driver"}</option>
                       {drivers.map(d => <option key={d.id} value={d.id}>{d.full_name}</option>)}
                     </select>
                   )}

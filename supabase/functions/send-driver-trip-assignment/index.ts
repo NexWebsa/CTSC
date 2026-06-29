@@ -17,6 +17,7 @@ type EmailRecipient = string | string[];
 interface RequestBody {
   bookingId?: string;
   driverId?: string;
+  isReassignment?: boolean;
 }
 
 interface BookingRow {
@@ -336,6 +337,7 @@ Deno.serve(async (req) => {
     const body: RequestBody = await req.json().catch(() => ({}));
     const bookingId = readString(body.bookingId);
     const driverId = readString(body.driverId);
+    const isReassignment = body.isReassignment === true;
 
     if (!bookingId) return jsonResponse({ error: "bookingId is required" }, 400);
     if (!driverId) return jsonResponse({ error: "driverId is required" }, 400);
@@ -457,15 +459,17 @@ Deno.serve(async (req) => {
       ["Additional notes", additionalNotes],
     ];
 
-    const title = "New Trip Assignment";
-    const intro = `Hi ${driver.full_name}, you have been assigned to booking #${reference}.`;
+    const title = isReassignment ? "Trip Reassignment" : "New Trip Assignment";
+    const intro = isReassignment
+      ? `Hi ${driver.full_name}, booking #${reference} has been reassigned to you.`
+      : `Hi ${driver.full_name}, you have been assigned to booking #${reference}.`;
     const html = renderEmailShell(title, intro, renderRows(rows), dashboardUrl);
     const text = renderText(title, intro, rows, dashboardUrl);
 
     const resend = await sendEmail(
       apiKey,
       driverEmail,
-      `New Trip Assignment - Booking #${reference}`,
+      `${isReassignment ? "Trip Reassignment" : "New Trip Assignment"} - Booking #${reference}`,
       html,
       text
     );
@@ -475,6 +479,7 @@ Deno.serve(async (req) => {
       status: "sent",
       bookingId,
       driverId,
+      isReassignment,
       to: driverEmail,
       emailId: emailIdFromResponse(resend),
     });
